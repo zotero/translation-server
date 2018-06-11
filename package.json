@@ -5,7 +5,11 @@
   "license": "AGPLv3",
   "main": "index.js",
   "dependencies": {
+    "config": "^1.30.0",
     "jsdom": "^11.11.0",
+    "koa": "^2.5.1",
+    "koa-bodyparser": "^4.2.1",
+    "koa-route": "^3.2.0",
     "request": "^2.87.0",
     "request-promise-native": "^1.0.5",
     "wicked-good-xpath": "^1.3.0",
@@ -13,6 +17,7 @@
   },
   "devDependencies": {},
   "scripts": {
+    "start": "node src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
