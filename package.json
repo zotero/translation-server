@@ -1,7 +1,8 @@
 {
-  "name": "translation-server-node",
+  "name": "translation-server",
   "version": "0.0.1",
-  "description": "A nodejs version of Zotero translation server",
+  "description": "Zotero translation server",
+  "license": "AGPLv3",
   "main": "index.js",
   "dependencies": {
     "jsdom": "^11.11.0",
