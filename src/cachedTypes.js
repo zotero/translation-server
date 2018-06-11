@@ -32,24 +32,25 @@ var TypeSchema = require('./resource/connectorTypeSchemaData');
 
 module.exports = new function() {
 	const schemaTypes = ["itemTypes", "creatorTypes", "fields"];
+	const typeData = {};
 	
 	// attach IDs and make referenceable by either ID or name
-	for (var i=0; i<schemaTypes.length; i++) {
-		var schemaType = schemaTypes[i];
-		this[schemaType] = Zotero.Utilities.deepCopy(TypeSchema[schemaType]);
-		for(var id in TypeSchema[schemaType]) {
-			var entry = this[schemaType][id];
+	for (let i = 0; i < schemaTypes.length; i++) {
+		let schemaType = schemaTypes[i];
+		typeData[schemaType] = Zotero.Utilities.deepCopy(TypeSchema[schemaType]);
+		for (let id in TypeSchema[schemaType]) {
+			let entry = typeData[schemaType][id];
 			entry.unshift(parseInt(id, 10));
-			this[schemaType][entry[1]/* name */] = entry;
+			typeData[schemaType][entry[1]/* name */] = entry;
 		}
 	}
-		
-	var itemTypes = TypeSchema["itemTypes"];
-	var creatorTypes = TypeSchema["creatorTypes"];
-	var fields = TypeSchema["fields"];
-
+	
+	var itemTypes = typeData.itemTypes;
+	var creatorTypes = typeData.creatorTypes;
+	var fields = typeData.fields;
+	
 	function Types() {
-		var thisType = TypeSchema[this.schemaType];
+		var thisType = typeData[this.schemaType];
 		
 		this.getID = function(idOrName) {
 			var type = thisType[idOrName];
