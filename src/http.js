@@ -28,7 +28,7 @@ var Zotero = require('./zotero');
 var request = require('request');
 var jsdom = require('jsdom');
 var { JSDOM } = jsdom;
-// var wgxpath = require('wicked-good-xpath');
+var wgxpath = require('wicked-good-xpath');
 
 /**
  * Functions for performing HTTP requests, both via XMLHTTPRequest and using a hidden browser
@@ -164,7 +164,7 @@ Zotero.HTTP = new function() {
 			)
 			.then((response) => {
 				var dom = new JSDOM(response.responseText, { url });
-				// wgxpath.install(dom.window, true);
+				wgxpath.install(dom.window, true);
 				return processor(dom.window.document, url);
 			});
 		});
