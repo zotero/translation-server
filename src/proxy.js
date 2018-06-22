@@ -41,6 +41,7 @@
 
 var url = require('url');
 var Zotero = require('./zotero');
+var TLDS = require('./tlds');
 
 Zotero.Proxies = new function() {
 
