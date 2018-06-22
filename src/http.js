@@ -23,6 +23,7 @@
     ***** END LICENSE BLOCK *****
 */
 
+var config = require('config');
 var Zotero = require('./zotero');
 var request = require('request');
 var jsdom = require('jsdom');
@@ -78,7 +79,7 @@ Zotero.HTTP = new function() {
 		}, options);
 		
 		options.headers = Object.assign({
-			'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0'
+			'User-Agent': config.get('userAgent')
 		}, options.headers);
 	
 		let logBody = '';
