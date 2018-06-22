@@ -1,17 +1,17 @@
 /*
 	***** BEGIN LICENSE BLOCK *****
-	
+
 	Copyright © 2016 Center for History and New Media
 					George Mason University, Fairfax, Virginia, USA
 					http://zotero.org
-	
+
 	This file is part of Zotero.
-	
+
 	Zotero is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Affero General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
-	
+
 	Zotero is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,7 +19,7 @@
 
 	You should have received a copy of the GNU Affero General Public License
 	along with Zotero.  If not, see <http://www.gnu.org/licenses/>.
-	
+
 	***** END LICENSE BLOCK *****
 */
 
@@ -41,13 +41,14 @@
 
 var url = require('url');
 var Zotero = require('./zotero');
+var TLDS = require('./tlds');
 
 Zotero.Proxies = new function() {
 
 	/**
 	 * Check the url for potential proxies and deproxify, providing a schema to build
 	 * a proxy object.
-	 * 
+	 *
 	 * @param URL
 	 * @returns {Object} Unproxied url to proxy object
 	 */
@@ -67,7 +68,7 @@ Zotero.Proxies = new function() {
 			}
 		}
 		urlToProxy[URL] = null;
-		
+
 		// if there is a subdomain that is also a TLD, also test against URI with the domain
 		// dropped after the TLD
 		// (i.e., www.nature.com.mutex.gmu.edu => www.nature.com)
@@ -83,7 +84,7 @@ Zotero.Proxies = new function() {
 				hostnameParts.push(host.split('.'));
 				hostnameParts[1].splice(0, 1, ...(hostnameParts[1][0].replace(/-/g, '.').split('.')));
 			}
-			
+
 			for (let i=0; i < hostnameParts.length; i++) {
 				let parts = hostnameParts[i];
 				// If hostnameParts has two entries, then the second one is with replaced hyphens
@@ -269,7 +270,7 @@ Zotero.Proxy.prototype.toProper = function(m) {
 	} else {
 		var properURL = scheme+this.hosts[0]+"/";
 	}
-	
+
 	// Replace `-` with `.` in https to support EZProxy HttpsHyphens.
 	// Potentially troublesome with domains that contain dashes
 	if (this.dotsToHyphens ||
