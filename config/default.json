@@ -1,14 +1,10 @@
 {
-	// CORS
-	"allowedOrigins": [],
+	"allowedOrigins": [], // CORS
 	"blacklistedDomains": [],
-	// Automatically try deproxified versions of URLs
-	"deproxifyURLs": false,
-	// Identifier search endpoint
-	"identifierSearchURL": "",
+	"deproxifyURLs": false, // Automatically try deproxified versions of URLs
+	"identifierSearchURL": "", // Identifier search endpoint for text search
 	"port": 1969,
 	"translators": {
-		// Pass an email to Crossref query to utilize the faster servers pool
-		"CrossrefREST.email": ""
+		"CrossrefREST.email": "" // Pass an email to Crossref REST API to utilize the faster servers pool
 	}
 }
