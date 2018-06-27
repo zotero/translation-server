@@ -26,11 +26,10 @@
 const config = require('config');
 const urlLib = require('url');
 
-const Translate = require('./translate');
+const Translate = require('./translation/translate');
 const HTTP = require('./http');
 const Debug = require('./debug');
 const Translators = require('./translators');
-const Zotero = require('./zotero');
 
 // Timeout for select request, in seconds
 const SERVER_SELECT_TIMEOUT = 120;

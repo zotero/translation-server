@@ -24,14 +24,13 @@
 */
 
 var config = require('config');
-var Zotero = require('./zotero');
 var request = require('request');
 var jsdom = require('jsdom');
 var { JSDOM } = jsdom;
 var wgxpath = require('wicked-good-xpath');
 
 /**
- * Functions for performing HTTP requests, both via XMLHTTPRequest and using a hidden browser
+ * Functions for performing HTTP requests
  * @namespace
  */
 Zotero.HTTP = new function() {

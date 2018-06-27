@@ -29,6 +29,7 @@ const Koa = require('koa');
 const bodyParser = require('koa-bodyparser');
 const app = module.exports = new Koa();
 
+require('./zotero');
 const Debug = require('./debug');
 const Translators = require('./translators');
 const Endpoints = require('./endpoints');

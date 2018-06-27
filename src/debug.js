@@ -23,8 +23,6 @@
     ***** END LICENSE BLOCK *****
 */
 
-var Zotero = require('./zotero');
-
 Zotero.Debug = new function () {
 	var _console, _stackTrace, _store, _level, _lastTime, _output = [];
 	var _slowTime = false;

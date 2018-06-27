@@ -27,7 +27,6 @@
  * Emulates very small parts of cachedTypes.js and itemFields.js APIs for use with connector
  */
  
-var Zotero = require('./zotero');
 var TypeSchema = require('./resource/connectorTypeSchemaData');
 
 module.exports = new function() {

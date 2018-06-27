@@ -23,6 +23,8 @@
     ***** END LICENSE BLOCK *****
 */
 
+const path = require('path');
+
 const ZOTERO_CONFIG = {
 	REPOSITORY_URL: 'https://repo.zotero.org/repo',
 	REPOSITORY_CHECK_INTERVAL: 86400, // 24 hours
@@ -72,6 +74,8 @@ var Zotero = module.exports = new function() {
 	}
 }
 
+global.Zotero = Zotero;
+
 // TODO: Pref store
 Zotero.Prefs = new function(){
 	const DEFAULTS = {
@@ -98,11 +102,20 @@ Zotero.Prefs = new function(){
 	this.clear = function(pref) {}
 }
 
+/**
+ * A custom require function to import modules from the main Zotero codebase
+ * @param {String} path
+ * @returns {*}
+ */
+Zotero.require = function(modulePath) {
+	return require(path.resolve(__dirname, '../modules/zotero/chrome/content/zotero/xpcom/', modulePath));
+}
+
 Zotero.Promise = require('./promise');
 Zotero.Debug = require('./debug');
 Zotero.Translators = require('./translators');
-Zotero.Date = require('./date');
-Zotero.OpenURL = require('./openurl');
+Zotero.Date = Zotero.require('./date');
+Zotero.OpenURL = Zotero.require('./openurl');
 Zotero.Utilities = require('./utilities');
 Zotero.Translator = require('./translator');
 Zotero.Proxies = require('./proxy').Proxies;

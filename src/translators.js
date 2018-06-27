@@ -28,7 +28,6 @@ var TRANSLATOR_TYPES = {"import":1, "export":2, "web":4, "search":8};
 
 const fs = require('fs');
 const path = require('path');
-const Zotero = require ('./zotero.js');
 
 /**
  * Singleton to handle loading and caching of translators

@@ -24,11 +24,11 @@
 */
 
 var process = require('process');
-var Translate = require('../src/translate');
+var Zotero = require('../src/zotero');
+var Translate = require('../src/translation/translate');
 var HTTP = require('../src/http');
 var Debug = require('../src/debug');
 var Translators = require('../src/translators');
-var Zotero = require('../src/zotero');
 
 var testURL = process.argv[2];
 

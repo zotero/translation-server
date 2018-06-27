@@ -23,8 +23,6 @@
  ***** END LICENSE BLOCK *****
 */
 
-var Zotero = require('./zotero.js');
-
 /*
  * Polyfill some of bluebirds methods to retain code readability in shared
  * translator code.
@@ -60,6 +58,15 @@ Zotero.Promise.delay = function (timeout) {
 	return new Promise(function (resolve) {
 		setTimeout(resolve, timeout);
 	});
+}
+
+Zotero.Promise.coroutine = function(fn) {
+	return async function() {
+		for (var val of fn.apply(this, arguments)) {
+			await val;
+		}
+		return val;
+	}
 }
 
 module.exports = Zotero.Promise;

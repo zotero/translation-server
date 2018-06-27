@@ -23,8 +23,6 @@
     ***** END LICENSE BLOCK *****
 */
 
-var Zotero = require('./zotero');
-
 // Enumeration of types of translators
 var TRANSLATOR_TYPES = {"import":1, "export":2, "web":4, "search":8};
 
