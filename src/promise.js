@@ -60,13 +60,4 @@ Zotero.Promise.delay = function (timeout) {
 	});
 }
 
-Zotero.Promise.coroutine = function(fn) {
-	return async function() {
-		for (var val of fn.apply(this, arguments)) {
-			await val;
-		}
-		return val;
-	}
-}
-
 module.exports = Zotero.Promise;
