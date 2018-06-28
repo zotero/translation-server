@@ -191,6 +191,48 @@ Zotero.HTTP = new function() {
 		
 		return results;
 	}
+	
+	/**
+	* Send an HTTP GET request
+	*
+	* @deprecated Use {@link Zotero.HTTP.request}
+	* @param {String}			url				URL to request
+	* @param {Function} 		onDone			Callback to be executed upon request completion
+	* @param {String}			responseCharset
+	* @param {N/A}				cookieSandbox	Not used in Connector
+	* @param {Object}			headers			HTTP headers to include with the request
+	* @return {Boolean} True if the request was sent, or false if the browser is offline
+	*/
+	this.doGet = function(url, onDone, responseCharset, cookieSandbox, headers) {
+		Zotero.debug('Zotero.HTTP.doGet is deprecated. Use Zotero.HTTP.request');
+		this.request('GET', url, {responseCharset, headers})
+		.then(onDone, function(e) {
+			onDone({status: e.status, responseText: e.responseText});
+			throw (e);
+		});
+		return true;
+	};
+	
+	/**
+	* Send an HTTP POST request
+	*
+	* @deprecated Use {@link Zotero.HTTP.request}
+	* @param {String}			url URL to request
+	* @param {String|Object[]}	body Request body
+	* @param {Function}			onDone Callback to be executed upon request completion
+	* @param {String}			headers Request HTTP headers
+	* @param {String}			responseCharset
+	* @return {Boolean} True if the request was sent, or false if the browser is offline
+	*/
+	this.doPost = function(url, body, onDone, headers, responseCharset) {
+		Zotero.debug('Zotero.HTTP.doPost is deprecated. Use Zotero.HTTP.request');
+		this.request('POST', url, {body, responseCharset, headers})
+		.then(onDone, function(e) {
+			onDone({status: e.status, responseText: e.responseText});
+			throw (e);
+		});
+		return true;
+	};
 }
 
 module.exports = Zotero.HTTP;
