@@ -23,6 +23,8 @@
     ***** END LICENSE BLOCK *****
 */
 
+Zotero.Utilities = require('./utilities');
+
 Zotero.Debug = new function () {
 	var _console, _stackTrace, _store, _level, _lastTime, _output = [];
 	var _slowTime = false;
@@ -33,52 +35,9 @@ Zotero.Debug = new function () {
 	
 	/**
 	 * Initialize debug logging
-	 *
-	 * Debug logging can be set in several different ways:
-	 *
-	 *   - via the debug.log pref in the client or connector
-	 *   - by enabling debug output logging from the Help menu
-	 *   - by passing -ZoteroDebug or -ZoteroDebugText on the command line
-	 *
-	 * In the client, debug.log and -ZoteroDebugText enable logging via the terminal, while -ZoteroDebug
-	 * enables logging via an in-app HTML-based window.
-	 *
-	 * @param {Integer} [forceDebugLog = 0] - Force output even if pref disabled
-	 *    2: window (-ZoteroDebug)
-	 *    1: text console (-ZoteroDebugText)
-	 *    0: disabled
 	 */
-	this.init = function (forceDebugLog = 0) {
-		_console = Zotero.Prefs.get('debug.log') || forceDebugLog == 1;
-		_consoleViewer = forceDebugLog == 2;
-		// When logging to the text console from the client on Mac/Linux, colorize output
-		if (_console && Zotero.isFx && !Zotero.isBookmarklet) {
-			_colorOutput = true;
-			
-			// Time threshold in ms above which intervals should be colored red in terminal output
-			_slowTime = Zotero.Prefs.get('debug.log.slowTime');
-		}
-		_store = Zotero.Prefs.get('debug.store');
-		if (_store) {
-			Zotero.Prefs.set('debug.store', false);
-		}
-		_level = Zotero.Prefs.get('debug.level');
-		_stackTrace = Zotero.Prefs.get('debug.stackTrace');
-		
-		this.storing = _store;
-		this.updateEnabled();
-		
-		if (Zotero.isStandalone) {
-			// Enable dump() from window (non-XPCOM) scopes when terminal or viewer logging is enabled.
-			// (These will always go to the terminal, even in viewer mode.)
-			Zotero.Prefs.set('browser.dom.window.dump.enabled', _console || _consoleViewer, true);
-			
-			if (_consoleViewer) {
-				setTimeout(function () {
-					Zotero.openInViewer("chrome://zotero/content/debugViewer.html");
-				}, 1000);
-			}
-		}
+	this.init = function (enabled=true) {
+		this.enabled = enabled;
 	}
 	
 	this.log = function (message, level, maxDepth, stack) {
@@ -114,7 +73,7 @@ Zotero.Debug = new function () {
 			slowSuffix = "\x1b[0m";
 		}
 		
-		delta = ("" + delta).padStart(7, "0")
+		delta = ("" + delta).padStart(7, "0");
 		
 		deltaStr = "(" + slowPrefix + "+" + delta + slowSuffix + ")";
 		if (_store) {
@@ -129,10 +88,9 @@ Zotero.Debug = new function () {
 			message += '\n' + this.stackToString(stack);
 		}
 		
-		if (_console || _consoleViewer) {
-			var output = '(' + level + ')' + deltaStr + ': ' + message;
-			console.log(output+"\n");
-		}
+		var output = '(' + level + ')' + deltaStr + ': ' + message;
+		console.log(output+"\n");
+		
 		if (_store) {
 			if (Math.random() < 1/1000) {
 				// Remove initial lines if over limit

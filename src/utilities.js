@@ -28,6 +28,9 @@
 
 var Zotero = require('./zotero');
 
+Zotero.OpenURL = Zotero.require('./openurl');
+Zotero.Date = Zotero.require('./date');
+
 Zotero.Utilities = Zotero.require('./utilities');
 Zotero.Utilities = {...Zotero.Utilities,
 	Internal: Zotero.require('./utilities_internal'),

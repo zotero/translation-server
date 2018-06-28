@@ -24,6 +24,7 @@
 */
 
 const path = require('path');
+const config = require('config');
 
 const ZOTERO_CONFIG = {
 	REPOSITORY_URL: 'https://repo.zotero.org/repo',
@@ -39,19 +40,6 @@ var Zotero = module.exports = new function() {
 	this.isNode = true;
 	this.isServer = true;
 	this.locale = 'en-US';
-	
-	this.init = async function (port) {
-		// ensure browser is online
-		
-		// Zotero.Prefs.init();
-		// Zotero.Debug.init();
-		// await Zotero.Date.init();
-		// Zotero.Connector_Types.init();
-		// Zotero.Server.Translation.init();
-		// if(port !== false) {
-		// 	Zotero.Server.init(port, true, 1000);
-		// }
-	};
 	
 	/**
 	 * Debug logging function
@@ -78,28 +66,27 @@ global.Zotero = Zotero;
 
 // TODO: Pref store
 Zotero.Prefs = new function(){
-	const DEFAULTS = {
-		"translatorsDirectory": './modules/translators'
-	};
-	
-	this.init = function() {};
+	var tempStore = {};
 	
 	this.get = function(pref) {
-		if (DEFAULTS.hasOwnProperty(pref)) return DEFAULTS[pref];
+		if (tempStore.hasOwnProperty(pref)) return tempStore[pref];
+		if (config.has(pref)) return config.get(pref);
 	};
 
 	/**
-	 * Should override per browser
 	 * @param pref
 	 * @param value
 	 */
-	this.set = function(pref, value) {};
+	this.set = function(pref, value) {
+		tempStore[pref] = value;
+	};
 
 	/**
-	 * Should override per browser
 	 * @param pref
 	 */
-	this.clear = function(pref) {}
+	this.clear = function(pref) {
+		delete tempStore[pref];
+	}
 }
 
 /**
