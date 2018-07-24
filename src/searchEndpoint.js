@@ -34,7 +34,7 @@ var SearchEndpoint = module.exports = {
 	requestsSinceGC: 0,
 	
 	handle: async function (ctx, next) {
-		ctx.assert(ctx.is('json'), 415);
+		ctx.assert(ctx.is('text/plain') || ctx.is('json'), 415);
 		
 		setTimeout(() => {
 			this.gc();
@@ -44,24 +44,21 @@ var SearchEndpoint = module.exports = {
 		
 		if (!data) {
 			ctx.throw(400, "POST data not provided\n");
-			return;
-		}
-		
-		if (!data.query) {
-			ctx.throw(400, "No query specified\n");
-			return;
 		}
 		
 		// If follow-up request, retrieve session and update context
+		var query;
 		var session;
-		if (data.session) {
+		if (typeof data == 'object') {
 			let sessionID = data.session;
+			if (!sessionID) {
+				ctx.throw(400, "'session' not provided");
+			}
 			session = sessionsWaitingForSelection[sessionID];
-			delete sessionsWaitingForSelection[sessionID];
 			if (!session) {
 				ctx.throw(400, "Session not found");
-				return;
 			}
+			delete sessionsWaitingForSelection[sessionID];
 			session.ctx = ctx;
 			session.next = next;
 			session.data = data;
@@ -71,7 +68,7 @@ var SearchEndpoint = module.exports = {
 		}
 		
 		// URL
-		if (data.query.match(/^https?:/)) {
+		if (typeof data == 'object' || data.match(/^https?:/)) {
 			await session.handleURL();
 			
 			// Store session if returning multiple choices
@@ -82,7 +79,6 @@ var SearchEndpoint = module.exports = {
 		}
 		
 		ctx.throw(501);
-		return;
 	},
 	
 	

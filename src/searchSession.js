@@ -41,12 +41,12 @@ var SearchSession = module.exports = function (ctx, next, data) {
  * @return {Promise<undefined>}
  */
 SearchSession.prototype.handleURL = async function () {
-	if (this.data.session && this.data.items) {
+	if (typeof this.data == 'object') {
 		await this.selectDone();
 		return;
 	}
 	
-	var url = this.data.query;
+	var url = this.data;
 	
 	try {
 		var parsedURL = urlLib.parse(url);
@@ -274,7 +274,7 @@ SearchSession.prototype.select = function (url, translate, items, callback, prom
 	//this._cookieSandbox.clearTimeout();
 	this.ctx.response.status = 300;
 	this.ctx.response.body = {
-		query: url,
+		url,
 		session: this.id,
 		items
 	};
@@ -284,11 +284,15 @@ SearchSession.prototype.select = function (url, translate, items, callback, prom
  * Called when items have been selected by the client
  */
 SearchSession.prototype.selectDone = function () {
-	var url = this.data.query;
+	var url = this.data.url;
 	var selectedItems = this.data.items;
 	
 	if (this.url != url) {
-		this.ctx.throw(409, "'query' does not match URL in session");
+		this.ctx.throw(409, "'url' does not match URL in session");
+	}
+	
+	if (!selectedItems) {
+		this.ctx.throw(400, "'items' not provided");
 	}
 	
 	// Make sure items are actually available

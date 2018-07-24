@@ -6,4 +6,4 @@ if [ -z "$1" ]; then
 	exit 1
 fi
 
-curl -v -d "{ \"query\": \"$URL\" }" -H "Content-Type: application/json" 127.0.0.1:1969/search | jq '{ query: .query, session: .session, items: .items | to_entries | [.[0]] | from_entries }' | curl -v -d @- -H "Content-Type: application/json" 127.0.0.1:1969/search
+curl -v -d "$URL" -H "Content-Type: text/plain" 127.0.0.1:1969/search | jq '{ url: .url, session: .session, items: .items | to_entries | [.[0]] | from_entries }' | curl -v -d @- -H "Content-Type: application/json" 127.0.0.1:1969/search

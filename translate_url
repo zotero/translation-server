@@ -6,4 +6,4 @@ if [ -z "$1" ]; then
 	exit 1
 fi
 
-curl -v -d "{ \"query\": \"$URL\" }" --header "Content-Type: application/json" 127.0.0.1:1969/search
+curl -v -d "$URL" -H "Content-Type: text/plain" 127.0.0.1:1969/search

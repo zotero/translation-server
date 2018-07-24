@@ -4,9 +4,8 @@ describe("/search", function () {
 			var url = testURL + 'plain';
 			var response = await request()
 				.post('/search')
-				.send({
-					query: url
-				});
+				.set('Content-Type', 'text/plain')
+				.send(url);
 			assert.equal(response.statusCode, 200);
 			var json = response.body;
 			
@@ -20,9 +19,8 @@ describe("/search", function () {
 			var url = testURL + 'single';
 			var response = await request()
 				.post('/search')
-				.send({
-					query: url
-				});
+				.set('Content-Type', 'text/plain')
+				.send(url);
 			assert.equal(response.statusCode, 200);
 			var json = response.body;
 			
@@ -36,12 +34,11 @@ describe("/search", function () {
 			var url = testURL + 'multiple';
 			var response = await request()
 				.post('/search')
-				.send({
-					query: url
-				});
+				.set('Content-Type', 'text/plain')
+				.send(url);
 			assert.equal(response.statusCode, 300);
 			var json = response.body;
-			assert.equal(json.query, url);
+			assert.equal(json.url, url);
 			assert.property(json, 'session');
 			assert.deepEqual(json.items, { 0: 'A', 1: 'B', 2: 'C' });
 			
@@ -62,9 +59,8 @@ describe("/search", function () {
 			var url = testURL + '404';
 			var response = await request()
 				.post('/search')
-				.send({
-					query: url
-				});
+				.set('Content-Type', 'text/plain')
+				.send(url);
 			assert.equal(response.statusCode, 400);
 			assert.equal(response.text, 'Remote page not found');
 		});
