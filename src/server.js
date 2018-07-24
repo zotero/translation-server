@@ -23,24 +23,25 @@
     ***** END LICENSE BLOCK *****
 */
 
+const process = require('process');
 const config = require('config');
-const _ = require('koa-route');
 const Koa = require('koa');
+const _ = require('koa-route');
 const bodyParser = require('koa-bodyparser');
-const app = module.exports = new Koa();
 
 require('./zotero');
 const Debug = require('./debug');
 const Translators = require('./translators');
-const Endpoints = require('./endpoints');
+const SearchEndpoint = require('./searchEndpoint');
 
-(async function() {
-	Debug.init(1);
-	await Translators.init();
-	
-	app.use(bodyParser());
-	app.use(_.post('/search', Endpoints.Search.handle.bind(Endpoints.Search)));
+const app = module.exports = new Koa();
+app.use(bodyParser());
+app.use(_.post('/search', SearchEndpoint.handle.bind(SearchEndpoint)));
+
+Debug.init(1);
+Translators.init()
+.then(function () {
 	var port = config.get('port');
 	app.listen(port);
 	Debug.log(`Listening on 0.0.0.0:${port}`);
-}());
+});
