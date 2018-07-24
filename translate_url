@@ -1,0 +1,9 @@
+#!/bin/bash
+
+URL="$1"
+if [ -z "$1" ]; then
+	echo "Usage: $0 URL"
+	exit 1
+fi
+
+curl -v -d "{ \"query\": \"$URL\" }" --header "Content-Type: application/json" 127.0.0.1:1969/search
