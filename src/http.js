@@ -35,7 +35,7 @@ var wgxpath = require('wicked-good-xpath');
  */
 Zotero.HTTP = new function() {
 	this.StatusError = function(url, status, body) {
-		this.message = `HTTP request to ${url} rejected with status ${xmlhttp.status}`;
+		this.message = `HTTP request to ${url} rejected with status ${status}`;
 		this.status = status;
 		this.responseText = body;
 	};
@@ -118,7 +118,20 @@ Zotero.HTTP = new function() {
 				if (error) {
 					return reject(error);
 				}
-				if (options.successCodes !== null && !options.successCodes.includes(response.statusCode)) {
+				
+				// Array of success codes given
+				if (options.successCodes) {
+					var success = options.successCodes.includes(status);
+				}
+				// Explicit FALSE means allow any status code
+				else if (options.successCodes === false) {
+					var success = true;
+				}
+				// Otherwise, 2xx is success
+				else {
+					var success = response.statusCode >= 200 && response.statusCode < 300;
+				}
+				if (!success) {
 					return reject(new Zotero.HTTP.StatusError(url, response.statusCode, response.body));
 				}
 
