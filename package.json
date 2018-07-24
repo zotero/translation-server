@@ -19,9 +19,13 @@
     "wicked-good-xpath": "git+https://github.com/adomasven/wicked-good-xpath.git#e84d65d",
     "xregexp": "^4.2.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "supertest": "^3.1.0"
+  },
   "scripts": {
     "start": "node src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_ENV=test node_modules/.bin/mocha test/*_test.js"
   }
 }

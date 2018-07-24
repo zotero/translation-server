@@ -41,6 +41,9 @@ app.use(_.post('/search', SearchEndpoint.handle.bind(SearchEndpoint)));
 Debug.init(1);
 Translators.init()
 .then(function () {
+	// Don't start server in test mode, since it's handled by supertest
+	if (process.env.NODE_ENV == 'test') return;
+	
 	var port = config.get('port');
 	app.listen(port);
 	Debug.log(`Listening on 0.0.0.0:${port}`);
