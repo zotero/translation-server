@@ -26,6 +26,7 @@
   },
   "scripts": {
     "start": "node src/server.js",
+    "start:debug": "node --inspect src/server.js",
     "test": "NODE_ENV=test node_modules/.bin/mocha test/*_test.js"
   }
 }

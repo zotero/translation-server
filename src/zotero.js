@@ -116,7 +116,9 @@ if(Zotero.RDF) {
 Zotero = Object.assign(Zotero, require('./cachedTypes'));
 
 // Providing these for the translation architecture
-var { JSDOM } = require('jsdom');
-global.DOMParser = new JSDOM('<html></html>').window.DOMParser;
 var wgxpath = require('wicked-good-xpath');
 global.XPathResult = wgxpath.XPathResultType;
+var { JSDOM } = require('jsdom');
+var dom = new JSDOM('<html></html>');
+wgxpath.install(dom.window, true);
+global.DOMParser = dom.window.DOMParser;
