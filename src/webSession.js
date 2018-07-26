@@ -28,6 +28,7 @@ const urlLib = require('url');
 const Translate = require('./translation/translate');
 const HTTP = require('./http');
 const Translators = require('./translators');
+const SearchEndpoint = require('./searchEndpoint');
 
 const SERVER_TRANSLATION_TIMEOUT = 30;
 
@@ -66,14 +67,16 @@ SearchSession.prototype.handleURL = async function () {
 			if (!doi) {
 				this.ctx.throw(500, "An error occurred retrieving the document\n");
 			}
-			return this.handleDOI(doi);
+			await SearchEndpoint.handleIdentifier(this.ctx, { DOI: doi });
+			return;
 		}
 	}
 	
 	// If a doi.org URL, use search handler
 	if (url.match(/^https?:\/\/[^\/]*doi\.org\//)) {
 		let doi = Zotero.Utilities.cleanDOI(url);
-		return this.handleDOI(doi);
+		await SearchEndpoint.handleIdentifier(this.ctx, { DOI: doi });
+		return;
 	}
 	
 	var urlsToTry = config.get('deproxifyURLs') ? this.deproxifyURL(url) : [url];
@@ -331,12 +334,7 @@ SearchSession.prototype.selectDone = function () {
 };*/
 
 
-/**
- * @return {Promise<undefined>}
- */
-SearchSession.prototype.handleDOI = async function (doi) {
-	this.ctx.throw(501);
-};
+
 
 
 /**

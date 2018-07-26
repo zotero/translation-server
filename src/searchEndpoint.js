@@ -23,22 +23,13 @@
     ***** END LICENSE BLOCK *****
 */
 
-const SearchSession = require('./searchSession');
-
-// Timeout for select requests, in seconds
-//const SELECT_TIMEOUT = 120;
-const SELECT_TIMEOUT = 15;
-const sessionsWaitingForSelection = {};
+const config = require('config');
+const Translate = require('./translation/translate');
+const TextSearch = require('./textSearch');
 
 var SearchEndpoint = module.exports = {
-	requestsSinceGC: 0,
-	
 	handle: async function (ctx, next) {
 		ctx.assert(ctx.is('text/plain') || ctx.is('json'), 415);
-		
-		setTimeout(() => {
-			this.gc();
-		});
 		
 		var data = ctx.request.body;
 		
@@ -46,54 +37,60 @@ var SearchEndpoint = module.exports = {
 			ctx.throw(400, "POST data not provided\n");
 		}
 		
-		// If follow-up request, retrieve session and update context
-		var query;
-		var session;
-		if (typeof data == 'object') {
-			let sessionID = data.session;
-			if (!sessionID) {
-				ctx.throw(400, "'session' not provided");
-			}
-			session = sessionsWaitingForSelection[sessionID];
-			if (!session) {
-				ctx.throw(400, "Session not found");
-			}
-			delete sessionsWaitingForSelection[sessionID];
-			session.ctx = ctx;
-			session.next = next;
-			session.data = data;
-		}
-		else {
-			session = new SearchSession(ctx, next, data);
+		// Look for DOI, ISBN, etc.
+		var identifiers = Zotero.Utilities.Internal.extractIdentifiers(data);
+		
+		// Use PMID only if it's the only text in the query
+		if (identifiers.length && identifiers[0].PMID && identifiers[0].PMID !== data.trim()) {
+			identifiers = [];
 		}
 		
-		// URL
-		if (typeof data == 'object' || data.match(/^https?:/)) {
-			await session.handleURL();
-			
-			// Store session if returning multiple choices
-			if (ctx.response.status == 300) {
-				sessionsWaitingForSelection[session.id] = session;
-			}
+		// Text search
+		if (!identifiers.length) {
+			await TextSearch.handle(ctx, next);
 			return;
 		}
 		
-		ctx.throw(501);
+		this.handleIdentifier(ctx, identifiers[0]);
 	},
 	
 	
-	/**
-	 * Perform garbage collection every 10 requests
-	 */
-	gc: function () {
-		if ((++this.requestsSinceGC) == 3) {
-			for (let i in sessionsWaitingForSelection) {
-				let session = sessionsWaitingForSelection[i];
-				if (session.started && Date.now() >= session.started + SELECT_TIMEOUT * 1000) {
-					delete sessionsWaitingForSelection[i];
-				}
+	handleIdentifier: async function (ctx, identifier) {
+		// Identifier
+		try {
+			var translate = new Translate.Search();
+			translate.setIdentifier(identifier);
+			let translators = await translate.getTranslators();
+			if (!translators.length) {
+				ctx.throw(501, "No translators available", { expose: true });
 			}
-			this.requestsSinceGC = 0;
+			translate.setTranslator(translators);
+			
+			var items = await translate.translate({
+				libraryID: false
+			});
 		}
+		catch (e) {
+			if (e == translate.ERROR_NO_RESULTS) {
+				ctx.throw(501, e, { expose: true });
+			}
+			
+			Zotero.debug(e, 1);
+			ctx.throw(
+				500,
+				"An error occurred during translation. "
+					+ "Please check translation with the Zotero client.",
+				{ expose: true }
+			);
+		}
+		
+		// Translation can return multiple items (e.g., a parent item and notes pointing to it),
+		// so we have to return an array with keyed items
+		var newItems = [];
+		items.forEach(item => {
+			newItems.push(...Zotero.Utilities.itemToAPIJSON(item));
+		});
+		
+		ctx.response.body = newItems;
 	}
 };
