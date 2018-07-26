@@ -51,7 +51,7 @@ var SearchEndpoint = module.exports = {
 			return;
 		}
 		
-		this.handleIdentifier(ctx, identifiers[0]);
+		await this.handleIdentifier(ctx, identifiers[0]);
 	},
 	
 	
