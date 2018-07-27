@@ -5,4 +5,5 @@ echo "Updating zotero translators"
 cd /app/modules/translators/
 git pull origin master
 
+cd /app/
 exec npm start
