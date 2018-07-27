@@ -14,6 +14,13 @@ The Zotero translation server lets you use [Zotero translators](https://www.zote
 
 `npm start`
 
+### With docker
+
+```
+docker build -t zotero/translation-server-v2:latest .
+docker run -it -d -p 1969:1969 zotero/translation-server-v2:latest
+```
+
 ## Running tests
 
 `npm test`
