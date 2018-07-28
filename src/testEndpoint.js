@@ -8,7 +8,6 @@ var TestEndpoint = module.exports = {
 			<head>
 				<title>Page Title</title>
 				<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
-				<meta name="DC.Type" content="Text.Serial.Journal"/>
 				<meta name="citation_title" content="Title"/>
 			</head>
 			<body>Body</body>
