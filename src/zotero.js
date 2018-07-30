@@ -122,3 +122,4 @@ var { JSDOM } = require('jsdom');
 var dom = new JSDOM('<html></html>');
 wgxpath.install(dom.window, true);
 global.DOMParser = dom.window.DOMParser;
+global.XMLSerializer = require('@harrison-ifeanyichukwu/xml-serializer');

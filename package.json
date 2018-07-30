@@ -9,6 +9,7 @@
     "url": "git+https://github.com/zotero/translation-server-v2"
   },
   "dependencies": {
+    "@harrison-ifeanyichukwu/xml-serializer": "^1.2.0",
     "config": "^1.30.0",
     "jsdom": "^11.11.0",
     "koa": "^2.5.1",
