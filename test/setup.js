@@ -1,6 +1,7 @@
 const config = require('config');
 const request = require('supertest');
 const chai = require('chai');
+global.sinon = require('sinon');
 const app = require('../src/server');
 const Koa = require('koa');
 const _ = require('koa-route');

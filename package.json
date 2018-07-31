@@ -14,6 +14,7 @@
     "koa": "^2.5.1",
     "koa-bodyparser": "^4.2.1",
     "koa-route": "^3.2.0",
+    "md5": "^2.2.1",
     "request": "^2.87.0",
     "request-promise-native": "^1.0.5",
     "w3c-xmlserializer": "0.0.1",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "chai": "^4.1.2",
     "mocha": "^5.2.0",
+    "sinon": "^6.1.4",
     "supertest": "^3.1.0"
   },
   "scripts": {

@@ -25,6 +25,8 @@
 
 const config = require('config');
 const HTTP = require('./http');
+const XRegExp = require('xregexp');
+const md5 = require('md5');
 
 module.exports = {
 	/**
@@ -501,5 +503,5 @@ function getLongestCommonSequence(title, query) {
 }
 
 function identifierToToken(identifier) {
-	return Zotero.Utilities.Internal.md5(JSON.stringify(identifier));
+	return md5(JSON.stringify(identifier));
 }

@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<zs:searchRetrieveResponse xmlns:zs="http://www.loc.gov/zing/srw/"><zs:version>1.1</zs:version><zs:numberOfRecords>1</zs:numberOfRecords><zs:records><zs:record><zs:recordSchema/><zs:recordPacking>xml</zs:recordPacking><zs:recordData><record xmlns="http://www.loc.gov/MARC21/slim">
+  <leader>01691cam a2200361 a 4500</leader>
+  <controlfield tag="001">16725802</controlfield>
+  <controlfield tag="005">20120514113518.0</controlfield>
+  <controlfield tag="008">110407s2011    mdua     b    001 0 eng  </controlfield>
+  <datafield tag="906" ind1=" " ind2=" ">
+    <subfield code="a">7</subfield>
+    <subfield code="b">cbc</subfield>
+    <subfield code="c">orignew</subfield>
+    <subfield code="d">1</subfield>
+    <subfield code="e">ecip</subfield>
+    <subfield code="f">20</subfield>
+    <subfield code="g">y-gencatlg</subfield>
+  </datafield>
+  <datafield tag="925" ind1="0" ind2=" ">
+    <subfield code="a">acquire</subfield>
+    <subfield code="b">2 shelf copies</subfield>
+    <subfield code="x">policy default</subfield>
+  </datafield>
+  <datafield tag="955" ind1=" " ind2=" ">
+    <subfield code="b">xh09 2011-04-07</subfield>
+    <subfield code="i">xh09 2011-04-07 to Dewey</subfield>
+    <subfield code="w">rd14 2011-04-07</subfield>
+    <subfield code="a">xn02 2011-12-13 1 copy rec'd., to CIP ver.</subfield>
+    <subfield code="f">rf10 2012-02-27 Z-CipVer. telework to BCDD</subfield>
+    <subfield code="t">xn05 2012-05-14 copy 2 added</subfield>
+  </datafield>
+  <datafield tag="010" ind1=" " ind2=" ">
+    <subfield code="a">  2011009234</subfield>
+  </datafield>
+  <datafield tag="016" ind1="7" ind2=" ">
+    <subfield code="a">015994368</subfield>
+    <subfield code="2">Uk</subfield>
+  </datafield>
+  <datafield tag="020" ind1=" " ind2=" ">
+    <subfield code="a">1421402831 (hardcover : alk. paper)</subfield>
+  </datafield>
+  <datafield tag="020" ind1=" " ind2=" ">
+    <subfield code="a">9781421402833 (hardcover : alk. paper)</subfield>
+  </datafield>
+  <datafield tag="035" ind1=" " ind2=" ">
+    <subfield code="a">(OCoLC)ocn711959730</subfield>
+  </datafield>
+  <datafield tag="040" ind1=" " ind2=" ">
+    <subfield code="a">DLC</subfield>
+    <subfield code="c">DLC</subfield>
+    <subfield code="d">YDX</subfield>
+    <subfield code="d">YDXCP</subfield>
+    <subfield code="d">BWX</subfield>
+    <subfield code="d">CDX</subfield>
+    <subfield code="d">IXA</subfield>
+    <subfield code="d">UKMGB</subfield>
+    <subfield code="d">ZCU</subfield>
+    <subfield code="d">DLC</subfield>
+  </datafield>
+  <datafield tag="042" ind1=" " ind2=" ">
+    <subfield code="a">pcc</subfield>
+  </datafield>
+  <datafield tag="043" ind1=" " ind2=" ">
+    <subfield code="a">e-fr---</subfield>
+  </datafield>
+  <datafield tag="050" ind1="0" ind2="0">
+    <subfield code="a">TX719</subfield>
+    <subfield code="b">.T253 2011</subfield>
+  </datafield>
+  <datafield tag="082" ind1="0" ind2="0">
+    <subfield code="a">641.5944</subfield>
+    <subfield code="2">22</subfield>
+  </datafield>
+  <datafield tag="100" ind1="1" ind2=" ">
+    <subfield code="a">Takats, Sean,</subfield>
+    <subfield code="d">1974-</subfield>
+  </datafield>
+  <datafield tag="245" ind1="1" ind2="4">
+    <subfield code="a">The expert cook in enlightenment France /</subfield>
+    <subfield code="c">Sean Takats.</subfield>
+  </datafield>
+  <datafield tag="260" ind1=" " ind2=" ">
+    <subfield code="a">Baltimore :</subfield>
+    <subfield code="b">Johns Hopkins University Press,</subfield>
+    <subfield code="c">2011.</subfield>
+  </datafield>
+  <datafield tag="300" ind1=" " ind2=" ">
+    <subfield code="a">x, 203 p. :</subfield>
+    <subfield code="b">ill. ;</subfield>
+    <subfield code="c">24 cm.</subfield>
+  </datafield>
+  <datafield tag="490" ind1="1" ind2=" ">
+    <subfield code="a">The Johns Hopkins University studies in historical and political science, 129th series ;</subfield>
+    <subfield code="v">2</subfield>
+  </datafield>
+  <datafield tag="504" ind1=" " ind2=" ">
+    <subfield code="a">Includes bibliographical references (p.[179]-196) and index.</subfield>
+  </datafield>
+  <datafield tag="505" ind1="0" ind2=" ">
+    <subfield code="a">Defining the cook -- Corrupting spaces -- Pots and pens -- Theorizing the kitchen -- The servant of medicine -- Conclusion.</subfield>
+  </datafield>
+  <datafield tag="650" ind1=" " ind2="0">
+    <subfield code="a">Cooking, French</subfield>
+    <subfield code="x">History</subfield>
+    <subfield code="y">18th century.</subfield>
+  </datafield>
+  <datafield tag="650" ind1=" " ind2="0">
+    <subfield code="a">Cooking</subfield>
+    <subfield code="z">France</subfield>
+    <subfield code="x">History</subfield>
+    <subfield code="y">18th century.</subfield>
+  </datafield>
+  <datafield tag="650" ind1=" " ind2="0">
+    <subfield code="a">Cooks</subfield>
+    <subfield code="z">France</subfield>
+    <subfield code="x">History</subfield>
+    <subfield code="y">18th century.</subfield>
+  </datafield>
+  <datafield tag="651" ind1=" " ind2="0">
+    <subfield code="a">France</subfield>
+    <subfield code="x">Social life and customs</subfield>
+    <subfield code="y">18th century.</subfield>
+  </datafield>
+  <datafield tag="830" ind1=" " ind2="0">
+    <subfield code="a">Johns Hopkins University studies in historical and political science ;</subfield>
+    <subfield code="v">129th ser., 2.</subfield>
+  </datafield>
+</record></zs:recordData><zs:recordPosition>1</zs:recordPosition></zs:record></zs:records><zs:echoedSearchRetrieveRequest><zs:version>1.1</zs:version><zs:query>bath.ISBN=^9781421402833</zs:query><zs:maximumRecords>1</zs:maximumRecords><zs:recordPacking>xml</zs:recordPacking></zs:echoedSearchRetrieveRequest></zs:searchRetrieveResponse>
