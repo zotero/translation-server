@@ -34,11 +34,13 @@ const Debug = require('./debug');
 const Translators = require('./translators');
 const SearchEndpoint = require('./searchEndpoint');
 const WebEndpoint = require('./webEndpoint');
+const ExportEndpoint = require('./exportEndpoint');
 
 const app = module.exports = new Koa();
 app.use(bodyParser({ enableTypes: ['text', 'json']}));
 app.use(_.post('/web', WebEndpoint.handle.bind(WebEndpoint)));
 app.use(_.post('/search', SearchEndpoint.handle.bind(SearchEndpoint)));
+app.use(_.post('/export', ExportEndpoint.handle.bind(ExportEndpoint)));
 
 Debug.init(1);
 Translators.init()
