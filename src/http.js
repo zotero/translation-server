@@ -143,6 +143,7 @@ Zotero.HTTP = new function() {
 					Zotero.debug(`HTTP ${response.statusCode} response: ${body}`);
 				}
 				return resolve({
+					responseURL: response.request.uri.href,
 					responseText: body,
 					headers: response.headers,
 					statusCode: response.statusCode
@@ -180,10 +181,10 @@ Zotero.HTTP = new function() {
 					jar: cookieSandbox
 				}
 			)
-			.then((response) => {
-				var dom = new JSDOM(response.responseText, { url });
+			.then((req) => {
+				var dom = new JSDOM(req.responseText, { url: req.responseURL });
 				wgxpath.install(dom.window, true);
-				return processor(dom.window.document, url);
+				return processor(dom.window.document, req.responseURL);
 			});
 		});
 		

@@ -54,6 +54,23 @@ describe("/web", function () {
 	});
 	
 	
+	it("should follow a redirect and use the final URL for translation", async function () {
+		var url = testURL + 'redirect';
+		var finalURL = testURL + 'single';
+		var response = await request()
+			.post('/web')
+			.set('Content-Type', 'text/plain')
+			.send(url);
+		assert.equal(response.statusCode, 200);
+		var json = response.body;
+		
+		assert.lengthOf(json, 1);
+		assert.equal(json[0].itemType, 'journalArticle');
+		assert.equal(json[0].title, 'Title');
+		assert.equal(json[0].url, finalURL);
+	});
+	
+	
 	it("should return 400 if a page returns a 404", async function () {
 		var url = testURL + '404';
 		var response = await request()
