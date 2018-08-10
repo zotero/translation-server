@@ -165,7 +165,8 @@ SearchSession.prototype.handleURL = async function () {
 			let doi = Zotero.Utilities.cleanDOI(decodeURIComponent(url).match(/[^\?]+/)[0]);
 			if (doi) {
 				Zotero.debug("Found DOI in URL -- continuing with " + doi);
-				return this.handleDOI(doi);
+				await SearchEndpoint.handleIdentifier(this.ctx, { DOI: doi });
+				return;
 			}
 			
 			// No more URLs to try
