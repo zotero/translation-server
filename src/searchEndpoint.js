@@ -29,7 +29,7 @@ const TextSearch = require('./textSearch');
 
 var SearchEndpoint = module.exports = {
 	handle: async function (ctx, next) {
-		ctx.assert(ctx.is('text/plain') || ctx.is('json'), 415);
+		ctx.assert(ctx.is('text'), 415);
 		
 		var data = ctx.request.body;
 		
