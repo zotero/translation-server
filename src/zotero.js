@@ -130,7 +130,7 @@ global.Services = {
 			// Only worry about the major version (4. vs. 5.)
 			var aParts = a.split(/\./g);
 			var bParts = b.split(/\./g);
-			return bParts[0] - aParts[0];
+			return aParts[0] - bParts[0];
 		}
 	}
 };
