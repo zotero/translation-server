@@ -29,6 +29,7 @@ const Translate = require('./translation/translate');
 const HTTP = require('./http');
 const Translators = require('./translators');
 const SearchEndpoint = require('./searchEndpoint');
+const { jar: cookieJar } = require('request');
 
 const SERVER_TRANSLATION_TIMEOUT = 30;
 
@@ -98,9 +99,7 @@ SearchSession.prototype.handleURL = async function () {
 		}*/
 		
 		// New request
-		/*this._cookieSandbox = new Zotero.CookieSandbox(null, url);
-		this._cookieSandbox.setTimeout(SERVER_TRANSLATION_TIMEOUT*1000,
-			this.timeout.bind(this));*/
+		this._cookieSandbox = cookieJar();
 		
 		let resolve;
 		let reject;
@@ -140,7 +139,7 @@ SearchSession.prototype.handleURL = async function () {
 			}
 			resolve();
 		});
-		//translate.setCookieSandbox(this._cookieSandbox);
+		translate.setCookieSandbox(this._cookieSandbox);
 		
 		try {
 			await HTTP.processDocuments(
@@ -150,8 +149,8 @@ SearchSession.prototype.handleURL = async function () {
 					// This could be optimized by only running detect on secondary translators
 					// if the first fails, but for now just run detect on all
 					return translate.getTranslators(true);
-				}/*,
-				this._cookieSandbox*/
+				},
+				this._cookieSandbox
 			);
 			return promise;
 		}

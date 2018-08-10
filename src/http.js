@@ -54,6 +54,7 @@ Zotero.HTTP = new function() {
 	 * @param {Object} [options] Options for HTTP request:<ul>
 	 *         <li>body - The body of a POST request</li>
 	 *         <li>headers - Object of HTTP headers to send with the request</li>
+	 *         <li>cookieSandbox - The sandbox from which cookies should be taken</li>
 	 *         <li>debug - Log response text and status code</li>
 	 *         <li>logBodyLength - Length of request body to log</li>
 	 *         <li>timeout - Request timeout specified in milliseconds [default 15000]</li>
@@ -70,6 +71,7 @@ Zotero.HTTP = new function() {
 		options = Object.assign({
 			body: null,
 			headers: {},
+			cookieSandbox: request.jar(),
 			debug: false,
 			logBodyLength: 1024,
 			timeout: 15000,
@@ -114,6 +116,8 @@ Zotero.HTTP = new function() {
 				headers: options.headers,
 				timeout: options.timeout,
 				body: options.body,
+				followAllRedirects: true,
+				jar: options.cookieSandbox
 			}, function(error, response, body) {
 				if (error) {
 					return reject(error);
@@ -155,14 +159,15 @@ Zotero.HTTP = new function() {
 	 *
 	 * @param {String|String[]} urls - URL(s) of documents to load
 	 * @param {Function} processor - Callback to be executed for each document loaded
+	 * @param {CookieJar} [cookieSandbox] Cookie sandbox object
 	 * @return {Promise<Array>} - A promise for an array of results from the processor runs
 	 */
-	this.processDocuments = async function (urls, processor) {
+	this.processDocuments = async function (urls, processor, cookieSandbox) {
 		// Handle old signature: urls, processor, onDone, onError
-		if (arguments.length > 2) {
+		if (arguments.length > 3) {
 			Zotero.debug("Zotero.HTTP.processDocuments() now takes only 2 arguments -- update your code");
-			var onDone = arguments[2];
-			var onError = arguments[3];
+			var onDone = arguments[3];
+			var onError = arguments[4];
 		}
 		
 		if (typeof urls == "string") urls = [urls];
@@ -171,7 +176,8 @@ Zotero.HTTP = new function() {
 				"GET",
 				url,
 				{
-					responseType: 'document'
+					responseType: 'document',
+					jar: cookieSandbox
 				}
 			)
 			.then((response) => {
@@ -212,13 +218,13 @@ Zotero.HTTP = new function() {
 	* @param {String}			url				URL to request
 	* @param {Function} 		onDone			Callback to be executed upon request completion
 	* @param {String}			responseCharset
-	* @param {N/A}				cookieSandbox	Not used in Connector
+	* @param {CookieJar}		cookieSandbox
 	* @param {Object}			headers			HTTP headers to include with the request
 	* @return {Boolean} True if the request was sent, or false if the browser is offline
 	*/
 	this.doGet = function(url, onDone, responseCharset, cookieSandbox, headers) {
 		Zotero.debug('Zotero.HTTP.doGet is deprecated. Use Zotero.HTTP.request');
-		this.request('GET', url, {responseCharset, headers})
+		this.request('GET', url, {responseCharset, headers, cookieSandbox})
 		.then(onDone, function(e) {
 			onDone({status: e.status, responseText: e.responseText});
 			throw (e);
@@ -235,11 +241,12 @@ Zotero.HTTP = new function() {
 	* @param {Function}			onDone Callback to be executed upon request completion
 	* @param {String}			headers Request HTTP headers
 	* @param {String}			responseCharset
+	* @param {CookieJar}		cookieSandbox
 	* @return {Boolean} True if the request was sent, or false if the browser is offline
 	*/
-	this.doPost = function(url, body, onDone, headers, responseCharset) {
+	this.doPost = function(url, body, onDone, headers, responseCharset, cookieSandbox) {
 		Zotero.debug('Zotero.HTTP.doPost is deprecated. Use Zotero.HTTP.request');
-		this.request('POST', url, {body, responseCharset, headers})
+		this.request('POST', url, {body, responseCharset, headers, cookieSandbox})
 		.then(onDone, function(e) {
 			onDone({status: e.status, responseText: e.responseText});
 			throw (e);
