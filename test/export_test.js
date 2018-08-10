@@ -6,7 +6,7 @@ describe("/export", function () {
 			.post('/export?format=bibtex')
 			.send(json)
 			.expect(200);
-		assert.isTrue(response.text.startsWith(''));
+		assert.isTrue(response.text.startsWith('@article'));
 	});
 	
 	it("should export to RIS", async function () {
@@ -14,6 +14,6 @@ describe("/export", function () {
 			.post('/export?format=ris')
 			.send(json)
 			.expect(200);
-		assert.isTrue(response.text.startsWith('@article'));
+		assert.isTrue(response.text.startsWith('TY  - NEWS'));
 	});
 });
