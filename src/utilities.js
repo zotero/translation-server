@@ -61,6 +61,8 @@ Zotero.Utilities.itemToAPIJSON = function(item) {
 		typeID = Zotero.ItemTypes.getID(item.itemType);
 	}
 	
+	var accessDateFieldID = Zotero.ItemFields.getID('accessDate');
+	
 	var fieldID, itemFieldID;
 	for(var field in item) {
 		if(field === "complete" || field === "itemID" || field === "attachments"
@@ -156,7 +158,7 @@ Zotero.Utilities.itemToAPIJSON = function(item) {
 			
 			// map from base field if possible
 			if((itemFieldID = Zotero.ItemFields.getFieldIDFromTypeAndBase(typeID, fieldID))) {
-				var fieldName = Zotero.ItemFields.getName(itemFieldID);
+				let fieldName = Zotero.ItemFields.getName(itemFieldID);
 				// Only map if item field does not exist
 				if(fieldName !== field && !newItem[fieldName]) newItem[fieldName] = val;
 				continue;	// already know this is valid
@@ -164,6 +166,11 @@ Zotero.Utilities.itemToAPIJSON = function(item) {
 			
 			// if field is valid for this type, set field
 			if(Zotero.ItemFields.isValidForType(fieldID, typeID)) {
+				// Convert access date placeholder to current time
+				if (fieldID == accessDateFieldID && val == "CURRENT_TIMESTAMP") {
+					val = Zotero.Date.dateToISO(new Date());
+				}
+				
 				newItem[field] = val;
 			} else {
 				Zotero.debug(`itemToAPIJSON: Discarded field ${field}: `
