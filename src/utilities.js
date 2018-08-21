@@ -34,9 +34,11 @@ Zotero.Date = Zotero.require('./date');
 Zotero.Utilities = Zotero.require('./utilities');
 Zotero.Utilities = {...Zotero.Utilities,
 	Internal: Zotero.require('./utilities_internal'),
-	Translate: Zotero.require('./utilities_translate'),
 	XRegExp: require('xregexp')
 };
+// Due to how Utilities.Translate is constructed from the of
+// Utilities, we cannot define it above in the object with the rest
+Zotero.Utilities.Translate = Zotero.require('./utilities_translate');
 
 /**
  * Converts an item from toArray() format to an array of items in
