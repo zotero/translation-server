@@ -20,7 +20,7 @@ The Zotero translation server lets you use [Zotero translators](https://www.zote
 
 ## Endpoints
 
-Currently supported endpoints in v2 are `/web` and `/search`. `/import` and `/export` will return soon.
+Currently supported endpoints in v2 are `/web`, `/search`, and `/export`. `/import` will return soon.
 
 ### Web Translation
 
