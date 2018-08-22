@@ -9,6 +9,9 @@ RUN npm install
 # (after dependencies installation)
 COPY . /app
 
+# Cloning zotero translators repository
+RUN git clone --depth=1 https://github.com/zotero/translators /app/modules/translators/
+
 # run the application
 EXPOSE 1969
 ENTRYPOINT [ "./docker-entrypoint.sh" ]
