@@ -1,6 +1,6 @@
 [submodule "modules/translators"]
 	path = modules/translators
-	url = https://github.com/zotero/translators
+	url = https://github.com/ubtue/zotero-translators.git
 [submodule "modules/zotero"]
 	path = modules/zotero
 	url = https://github.com/zotero/zotero.git
