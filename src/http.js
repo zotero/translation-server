@@ -125,7 +125,7 @@ Zotero.HTTP = new function() {
 				
 				// Array of success codes given
 				if (options.successCodes) {
-					var success = options.successCodes.includes(status);
+					var success = options.successCodes.includes(response.statusCode);
 				}
 				// Explicit FALSE means allow any status code
 				else if (options.successCodes === false) {
@@ -178,7 +178,7 @@ Zotero.HTTP = new function() {
 				url,
 				{
 					responseType: 'document',
-					jar: cookieSandbox
+					cookieSandbox
 				}
 			)
 			.then((req) => {

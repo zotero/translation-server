@@ -20,7 +20,7 @@ The Zotero translation server lets you use [Zotero translators](https://www.zote
 
 ## Endpoints
 
-Currently supported endpoints in v2 are `/web` and `/search`. `/import` and `/export` will return soon.
+Currently supported endpoints in v2 are `/web`, `/search`, and `/export`. `/import` will return soon.
 
 ### Web Translation
 
@@ -67,4 +67,12 @@ Retrieve metadata from an identifier (DOI, ISBN, PMID, arXiv ID):
 
 ```
 $ curl -d 10.2307/4486062 -H 'Content-Type: text/plain' http://127.0.0.1:1969/search
+```
+
+### Export Translation
+
+Convert items in Zotero API JSON format to a [supported export format](https://github.com/zotero/translation-server-v2/blob/master/src/exportEndpoint.js#L29-L47) (RIS, BibTeX, etc.):
+
+```
+$ curl -d @items.json -H 'Content-Type: application/json' 'http://127.0.0.1:1969/export?format=bibtex'
 ```
