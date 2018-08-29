@@ -178,7 +178,7 @@ Zotero.HTTP = new function() {
 				url,
 				{
 					responseType: 'document',
-					jar: cookieSandbox
+					cookieSandbox
 				}
 			)
 			.then((req) => {
