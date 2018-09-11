@@ -25,6 +25,7 @@
 
 var config = require('config');
 var request = require('request');
+var url = require('url');
 var jsdom = require('jsdom');
 var { JSDOM } = jsdom;
 var wgxpath = require('wicked-good-xpath');
@@ -66,7 +67,7 @@ Zotero.HTTP = new function() {
 	 * 		- headers {Object}
 	 * 		- statusCode {Number}
 	 */
-	this.request = function(method, url, options = {}) {
+	this.request = function(method, requestURL, options = {}) {
 		// Default options
 		options = Object.assign({
 			body: null,
@@ -107,11 +108,11 @@ Zotero.HTTP = new function() {
 			logBody = logBody.replace(/password":"[^"]+/, 'password":"********');
 			logBody = logBody.replace(/password=[^&]+/, 'password=********');
 		}
-		Zotero.debug(`HTTP ${method} ${url}${logBody}`);
+		Zotero.debug(`HTTP ${method} ${requestURL}${logBody}`);
 		
 		return new Promise(function(resolve, reject) {
 			request({
-				uri: url,
+				uri: requestURL,
 				method,
 				headers: options.headers,
 				timeout: options.timeout,
@@ -136,18 +137,53 @@ Zotero.HTTP = new function() {
 					var success = response.statusCode >= 200 && response.statusCode < 300;
 				}
 				if (!success) {
-					return reject(new Zotero.HTTP.StatusError(url, response.statusCode, response.body));
+					return reject(new Zotero.HTTP.StatusError(requestURL, response.statusCode, response.body));
 				}
 
 				if (options.debug) {
 					Zotero.debug(`HTTP ${response.statusCode} response: ${body}`);
 				}
-				return resolve({
+				
+				var result = {
 					responseURL: response.request.uri.href,
-					responseText: body,
 					headers: response.headers,
-					statusCode: response.statusCode
-				});
+					status: response.statusCode
+				};
+				
+				if (options.responseType == 'document') {
+					let dom = new JSDOM(body, { url: result.responseURL });
+					wgxpath.install(dom.window, true);
+					result.response = dom.window.document;
+					
+					// Follow meta redirects
+					if (response.headers['content-type']
+							&& response.headers['content-type'].startsWith('text/html')) {
+						let meta = result.response.querySelector('meta[http-equiv=refresh]');
+						if (meta) {
+							let parts = meta.getAttribute('content').split(/;\s*url=/);
+							if (parts.length == 2) {
+								let newURL = parts[1].trim().replace(/^'(.+)'/, '$1');
+								if (newURL.startsWith('/')) {
+									let { protocol, host } = url.parse(requestURL);
+									newURL = protocol + '//' + host + newURL;
+								}
+								Zotero.debug("Meta refresh to " + newURL);
+								result = Zotero.HTTP.request(method, newURL, options);
+							}
+						}
+					}
+				}
+				else if (options.responseType == 'json') {
+					result.response = JSON.parse(body);
+				}
+				else if (!options.responseType || options.responseType == 'text') {
+					result.response = body;
+				}
+				else {
+					throw new Error("Invalid responseType");
+				}
+				
+				return resolve(result);
 			});
 		});
 		
@@ -182,9 +218,7 @@ Zotero.HTTP = new function() {
 				}
 			)
 			.then((req) => {
-				var dom = new JSDOM(req.responseText, { url: req.responseURL });
-				wgxpath.install(dom.window, true);
-				return processor(dom.window.document, req.responseURL);
+				return processor(req.response, req.responseURL);
 			});
 		});
 		
