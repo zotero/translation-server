@@ -178,6 +178,7 @@ Zotero.HTTP = new function() {
 				}
 				else if (!options.responseType || options.responseType == 'text') {
 					result.response = body;
+					result.responseText = body;
 				}
 				else {
 					throw new Error("Invalid responseType");
