@@ -163,10 +163,8 @@ Zotero.HTTP = new function() {
 							let parts = meta.getAttribute('content').split(/;\s*url=/);
 							if (parts.length == 2) {
 								let newURL = parts[1].trim().replace(/^'(.+)'/, '$1');
-								if (newURL.startsWith('/')) {
-									let { protocol, host } = url.parse(requestURL);
-									newURL = protocol + '//' + host + newURL;
-								}
+								newURL = url.resolve(requestURL, newURL);
+								
 								Zotero.debug("Meta refresh to " + newURL);
 								result = Zotero.HTTP.request(method, newURL, options);
 							}
