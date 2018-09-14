@@ -161,7 +161,9 @@ Zotero.HTTP = new function() {
 						let meta = result.response.querySelector('meta[http-equiv=refresh]');
 						if (meta) {
 							let parts = meta.getAttribute('content').split(/;\s*url=/);
-							if (parts.length == 2) {
+							// If there's a redirect to another URL in less than 15 seconds,
+							// follow it
+							if (parts.length == 2 && parseInt(parts[0]) <= 15) {
 								let newURL = parts[1].trim().replace(/^'(.+)'/, '$1');
 								newURL = url.resolve(requestURL, newURL);
 								
