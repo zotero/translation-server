@@ -50,5 +50,5 @@ Translators.init()
 	
 	var port = config.get('port');
 	app.listen(port);
-	Debug.log(`Listening on 0.0.0.0:${port}`);
+	Debug.log('Listening on 0.0.0.0:${port}');
 });
