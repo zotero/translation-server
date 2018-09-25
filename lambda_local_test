@@ -1,0 +1,17 @@
+#!/bin/bash -e
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+if [ -z $1 ]; then
+	echo "Usage: $0 config.env" >&2
+	exit 1
+fi
+
+set -a
+. "$dir/$1"
+set +a
+
+j2 "$dir/lambda_template.yaml.j2" > "$dir/lambda_template.yaml"
+
+sam local invoke Lambda --template "$dir/lambda_template.yaml" -e lambda_local_test_event.json
+
+rm "$dir/lambda_template.yaml"

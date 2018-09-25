@@ -1,0 +1,29 @@
+#!/bin/bash -e
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+if [ -z $1 ]; then
+	echo "Usage: $0 config.env" >&2
+	exit 1
+fi
+
+set -a
+. "$dir/$1"
+set +a
+
+rm -rf package
+mkdir package
+
+# Skip files that aren't required i.e. ".git"
+cp -r config package/
+cp -r modules package/
+cp -r node_modules package/
+cp -r src package/
+
+# Remove broken symlinks because "sam package" complains
+find -L package/ -maxdepth 10 -type l -delete
+
+j2 "$dir/lambda_template.yaml.j2" > "$dir/package/template.yaml"
+
+sam package --template-file "$dir/package/template.yaml" --s3-bucket $deployment_bucket_name --output-template-file "$dir/package/package.yaml"
+aws cloudformation deploy --template-file "$dir/package/package.yaml" --stack-name $stack_name --capabilities CAPABILITY_IAM
+rm -rf "$dir/package"
