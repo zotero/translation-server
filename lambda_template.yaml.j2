@@ -7,6 +7,7 @@ Resources:
   Lambda:
     Type: 'AWS::Serverless::Function'
     Properties:
+      FunctionName: {{ main_function_name }}
       CodeUri: ./
       Handler: src/lambda.handler
       Runtime: nodejs8.10
