@@ -76,3 +76,20 @@ Convert items in Zotero API JSON format to a [supported export format](https://g
 ```
 $ curl -d @items.json -H 'Content-Type: application/json' 'http://127.0.0.1:1969/export?format=bibtex'
 ```
+
+### Lambda
+
+Copy and configure config file:
+```
+cp lambda_config.env-sample lambda_config.env
+```
+
+Test locally:
+```
+./lambda_local_test lambda_config.env
+```
+
+Deploy:
+```
+./lambda_deploy lambda_config.env
+```

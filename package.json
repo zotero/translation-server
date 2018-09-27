@@ -17,6 +17,7 @@
     "md5": "^2.2.1",
     "request": "^2.87.0",
     "request-promise-native": "^1.0.5",
+    "serverless-http": "^1.6.0",
     "w3c-xmlserializer": "0.0.1",
     "wicked-good-xpath": "git+https://github.com/adomasven/wicked-good-xpath.git#e84d65d",
     "xregexp": "^4.2.0"
