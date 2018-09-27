@@ -10,9 +10,30 @@ The Zotero translation server lets you use [Zotero translators](https://www.zote
 
 1. `npm i`
 
-## Running the Server
+## Running via Node.js
 
 `npm start`
+
+## Running on AWS Lambda
+
+translation-server can also run on AWS Lambda and be accessed through API Gateway. You will need the [AWS SAM CLI](https://docs.aws.amazon.com/lambda/latest/dg/sam-cli-requirements.html) to deploy the server.
+
+Copy and configure config file:
+```
+cp lambda_config.env-sample lambda_config.env
+```
+
+Test locally:
+```
+./lambda_local_test lambda_config.env
+```
+
+Deploy:
+```
+./lambda_deploy lambda_config.env
+```
+
+You can view the API Gateway endpoint in the Outputs section of the CloudFormation stack in the AWS Console.
 
 ## Running tests
 
@@ -75,21 +96,4 @@ Convert items in Zotero API JSON format to a [supported export format](https://g
 
 ```
 $ curl -d @items.json -H 'Content-Type: application/json' 'http://127.0.0.1:1969/export?format=bibtex'
-```
-
-### Lambda
-
-Copy and configure config file:
-```
-cp lambda_config.env-sample lambda_config.env
-```
-
-Test locally:
-```
-./lambda_local_test lambda_config.env
-```
-
-Deploy:
-```
-./lambda_deploy lambda_config.env
 ```
