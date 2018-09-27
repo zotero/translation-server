@@ -12,8 +12,6 @@ Resources:
       Runtime: nodejs8.10
       MemorySize: 2048
       Timeout: 30
-      #Policies:
-      # - VPCAccessPolicy: {}
       Events:
         # API Gateway
         API:
@@ -22,10 +20,6 @@ Resources:
             # Proxy all POST requests to Lambda function
             Path: /{proxy+}
             Method: post
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - {{ security_group }}
-      #  SubnetIds: {{ subnet_ids }}
       Environment:
         Variables:
           NODE_ENV: {{ node_env }}
