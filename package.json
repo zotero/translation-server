@@ -9,6 +9,7 @@
     "url": "git+https://github.com/zotero/translation-server-v2"
   },
   "dependencies": {
+    "aws-sdk": "^2.326.0",
     "config": "^1.30.0",
     "jsdom": "^11.11.0",
     "koa": "^2.5.1",
