@@ -26,6 +26,7 @@
 const config = require('config');
 const urlLib = require('url');
 const Translate = require('./translation/translate');
+const TLDS = Zotero.require('./translation/tlds');
 const HTTP = require('./http');
 const Translators = require('./translators');
 const SearchEndpoint = require('./searchEndpoint');
