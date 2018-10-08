@@ -28,6 +28,7 @@ const config = require('config');
 const Koa = require('koa');
 const _ = require('koa-route');
 const bodyParser = require('koa-bodyparser');
+const cors = require('./cors');
 
 require('./zotero');
 const Debug = require('./debug');
@@ -37,6 +38,7 @@ const WebEndpoint = require('./webEndpoint');
 const ExportEndpoint = require('./exportEndpoint');
 
 const app = module.exports = new Koa();
+app.use(cors);
 app.use(bodyParser({ enableTypes: ['text', 'json']}));
 app.use(_.post('/web', WebEndpoint.handle.bind(WebEndpoint)));
 app.use(_.post('/search', SearchEndpoint.handle.bind(SearchEndpoint)));
