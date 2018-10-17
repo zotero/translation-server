@@ -9,6 +9,7 @@
     "url": "git+https://github.com/zotero/translation-server-v2"
   },
   "dependencies": {
+    "aws-sdk": "^2.326.0",
     "config": "^1.30.0",
     "jsdom": "^11.11.0",
     "koa": "^2.5.1",
@@ -17,6 +18,7 @@
     "md5": "^2.2.1",
     "request": "^2.87.0",
     "request-promise-native": "^1.0.5",
+    "serverless-http": "^1.6.0",
     "w3c-xmlserializer": "0.0.1",
     "wicked-good-xpath": "git+https://github.com/adomasven/wicked-good-xpath.git#e84d65d",
     "xregexp": "^4.2.0"
