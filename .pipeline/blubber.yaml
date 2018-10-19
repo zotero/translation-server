@@ -1,0 +1,25 @@
+---
+version: v3
+base: docker-registry.wikimedia.org/nodejs10-slim:0.0.1
+
+variants:
+  build:
+    base: docker-registry.wikimedia.org/nodejs10-devel:0.0.1
+    apt: { packages: [git] }
+    node:
+      requirements: [package.json, package-lock.json]
+
+  test:
+    includes: [build]
+    runs:
+      insecurely: true
+    entrypoint: [npm, test]
+
+  prep:
+    includes: [build]
+    node: { env: production }
+
+  production:
+    copies: prep
+    node: { env: production }
+    entrypoint: [node, src/server.js]
