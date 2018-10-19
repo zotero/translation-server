@@ -1,6 +1,6 @@
 {
   "name": "translation-server",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "description": "Zotero translation server",
   "license": "AGPL-3.0-only",
   "main": "index.js",
@@ -22,7 +22,8 @@
     "serverless-http": "^1.6.0",
     "w3c-xmlserializer": "0.0.1",
     "wicked-good-xpath": "git+https://github.com/adomasven/wicked-good-xpath.git#e84d65d",
-    "xregexp": "^4.2.0"
+    "xregexp": "^4.2.0",
+    "yargs": "^12.0.2"
   },
   "devDependencies": {
     "chai": "^4.1.2",
