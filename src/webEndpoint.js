@@ -65,7 +65,8 @@ var WebEndpoint = module.exports = {
 			session.data = data;
 		}
 		else {
-			session = new WebSession(ctx, next, data);
+			let single = !!ctx.request.query.single;
+			session = new WebSession(ctx, next, data, { single });
 		}
 		
 		if (typeof data != 'object' && !data.match(/^https?:/)) {

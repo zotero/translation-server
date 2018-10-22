@@ -34,10 +34,11 @@ const { jar: cookieJar } = require('request');
 
 const SERVER_TRANSLATION_TIMEOUT = 30;
 
-var WebSession = module.exports = function (ctx, next, data) {
+var WebSession = module.exports = function (ctx, next, data, options) {
 	this.ctx = ctx;
 	this.next = next;
 	this.data = data;
+	this.options = options;
 };
 
 /**
@@ -112,6 +113,11 @@ WebSession.prototype.handleURL = async function () {
 		let translate = new Translate.Web();
 		let translatePromise;
 		translate.setHandler("translators", async function (translate, translators) {
+			// Force single-page saving
+			if (this.options.single) {
+				translators = translators.filter(t => t.itemType != 'multiple');
+			}
+			
 			try {
 				translatePromise = this.translate(translate, translators);
 				await translatePromise;
