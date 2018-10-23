@@ -214,7 +214,7 @@ WebSession.prototype.translate = async function (translate, translators) {
 			
 			// If no more translators, save as webpage
 			if (!translators.length) {
-				this.saveWebpage(this.ctx, translate);
+				this.saveWebpage(translate);
 				return;
 			}
 			
