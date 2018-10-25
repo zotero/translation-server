@@ -3,8 +3,6 @@ const config = require('config');
 module.exports = async (ctx, next) => {
 	if (ctx.headers.origin) {
 		let allowedOrigins = config.get('allowedOrigins').filter(x => x);
-		console.log(config.get('allowedOrigins'));
-		console.log(allowedOrigins);
 		let allAllowed = allowedOrigins.includes('*');
 		if (allAllowed || allowedOrigins.includes(ctx.headers.origin)) {
 			ctx.set("Access-Control-Allow-Origin", allAllowed ? '*' : ctx.headers.origin);
