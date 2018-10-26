@@ -194,7 +194,7 @@ Zotero.HTTP = new function() {
 					if (response.headers['content-type']
 							&& response.headers['content-type'].startsWith('text/html')) {
 						let meta = result.response.querySelector('meta[http-equiv=refresh]');
-						if (meta) {
+						if (meta && meta.getAttribute('content')) {
 							let parts = meta.getAttribute('content').split(/;\s*url=/);
 							// If there's a redirect to another URL in less than 15 seconds,
 							// follow it
