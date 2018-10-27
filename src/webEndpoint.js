@@ -66,8 +66,16 @@ var WebEndpoint = module.exports = {
 			}
 		}
 		else {
-			if (!data.match(/^https?:/)) {
+			// From https://stackoverflow.com/a/3809435, modified to allow up to 9-char TLDs and IP addresses
+			let urlRE = /^(https?:\/\/)?([-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,9}\b|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|\b)){4})(\S*)$/i;
+			
+			if (!data.match(urlRE)) {
 				ctx.throw(400, "URL not provided");
+			}
+			
+			// Prepend 'http://' if not provided
+			if (!data.startsWith('http')) {
+				data = 'http://' + data;
 			}
 			
 			let single = !!ctx.request.query.single;
