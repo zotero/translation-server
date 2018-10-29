@@ -36,8 +36,10 @@ module.exports = {
 	 * @return {Promise<undefined>}
 	 */
 	handle: async function (ctx, next) {
-		// If identifier-search server isn't available, return 501
-		if (!config.has('identifierSearchLambda') || !config.get("identifierSearchLambda")) {
+		// If identifier-search is disabled in the request or unavailable, return 501
+		if (ctx.request.query.text === '0'
+				|| !config.has('identifierSearchLambda')
+				|| !config.get("identifierSearchLambda")) {
 			ctx.throw(501, "No identifiers found", { expose: true });
 		}
 		
