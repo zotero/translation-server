@@ -29,6 +29,32 @@ var url = require('url');
 var jsdom = require('jsdom');
 var { JSDOM } = jsdom;
 var wgxpath = require('wicked-good-xpath');
+var cheerio = require('cheerio');
+
+/**
+ * Clean text nodes bigger than 50kb
+ *
+ * @param node Cheerio node
+ * @return {boolean} Return true if at least one node was cleaned
+ */
+function cleanNode(node) {
+	let ret = false;
+	if (node.type === 'text') {
+		if (node.data.length > 50 * 1024) {
+			node.data = '';
+			ret = true;
+		}
+	}
+	
+	if (node.children) {
+		for (let child of node.children) {
+			if (cleanNode(child)) {
+				ret = true;
+			}
+		}
+	}
+	return ret;
+}
 
 /**
  * Functions for performing HTTP requests
@@ -151,7 +177,16 @@ Zotero.HTTP = new function() {
 				};
 				
 				if (options.responseType == 'document') {
-					let dom = new JSDOM(body, { url: result.responseURL });
+					// A quick workaround for JSDOM slowdown when parsing web pages with large
+					// embedded scripts, stylesheets or other text blocks. Otherwise JSDOM
+					// can spend 30s or more by trying to parse them
+					let $ = cheerio.load(body);
+					// Use this workaround only if at least one text node was cleaned
+					if(cleanNode($._root)) {
+						body = $.html();
+					}
+
+					let dom = new JSDOM(body, { url: result.responseURL});
 					wgxpath.install(dom.window, true);
 					result.response = dom.window.document;
 					
@@ -159,7 +194,7 @@ Zotero.HTTP = new function() {
 					if (response.headers['content-type']
 							&& response.headers['content-type'].startsWith('text/html')) {
 						let meta = result.response.querySelector('meta[http-equiv=refresh]');
-						if (meta) {
+						if (meta && meta.getAttribute('content')) {
 							let parts = meta.getAttribute('content').split(/;\s*url=/);
 							// If there's a redirect to another URL in less than 15 seconds,
 							// follow it
