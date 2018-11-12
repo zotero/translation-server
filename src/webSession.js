@@ -75,13 +75,6 @@ WebSession.prototype.handleURL = async function () {
 		}
 	}
 	
-	// If a doi.org URL, use search handler
-	if (url.match(/^https?:\/\/[^\/]*doi\.org\//)) {
-		let doi = Zotero.Utilities.cleanDOI(url);
-		await SearchEndpoint.handleIdentifier(this.ctx, { DOI: doi });
-		return;
-	}
-	
 	var urlsToTry = config.get('deproxifyURLs') ? this.deproxifyURL(url) : [url];
 	for (let i = 0; i < urlsToTry.length; i++) {
 		let url = urlsToTry[i];
