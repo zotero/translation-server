@@ -4,11 +4,11 @@ The Zotero translation server lets you use [Zotero translators](https://www.zote
 
 ## Installation
 
-1. `git clone --recurse-submodules -j4 https://github.com/zotero/translation-server translation-server`
+1. `git clone --recurse-submodules --jobs 4 https://github.com/zotero/translation-server`
 
 1. `cd translation-server`
 
-1. `npm i`
+1. `npm install`
 
 ## Running via Node.js
 
