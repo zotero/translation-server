@@ -35,6 +35,16 @@ Deploy:
 
 You can view the API Gateway endpoint in the Outputs section of the CloudFormation stack in the AWS Console.
 
+## Proxy Support
+
+You can configure `translation-server` to use a proxy server by setting the `HTTP_PROXY` and `HTTPS_PROXY` environment variables:
+
+`HTTP_PROXY=http://proxy.example.com:8080 HTTPS_PROXY=http://proxy.example.com:8080 npm start`
+
+If your proxy server uses a self-signed certificate, you can set `NODE_TLS_REJECT_UNAUTHORIZED=0` to force Node to ignore certificate errors.
+
+It’s also possible to opt out of proxying for specific hosts by using the `NO_PROXY` variable. See the [Node `request` library documentation](https://github.com/request/request#controlling-proxy-behaviour-using-environment-variables) for more details.
+
 ## Running tests
 
 `npm test`
