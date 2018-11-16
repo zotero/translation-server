@@ -18,7 +18,6 @@ cp -r config package/
 cp -r modules package/
 cp -r node_modules package/
 cp -r src package/
-cp package.json package/
 
 # Remove broken symlinks because "sam package" complains
 find -L package/ -maxdepth 10 -type l -delete
