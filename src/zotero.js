@@ -112,7 +112,8 @@ Zotero.Translator = require('./translator');
 Zotero.Translate = require('./translation/translate');
 Zotero.Proxies = require('./proxy').Proxies;
 Zotero.Proxy = require('./proxy').Proxy;
-Zotero.CiteProc =  {CSL: Zotero.require('./citeproc.js')};
+Zotero.CiteProc = Zotero.require('./citeproc.js');
+
 var $rdf = require('./rdf/init');
 if(Zotero.RDF) {
 	Zotero.RDF.AJAW = $rdf;
