@@ -4,11 +4,11 @@ The Zotero translation server lets you use [Zotero translators](https://www.zote
 
 ## Installation
 
-1. `git clone --recurse-submodules -j4 https://github.com/zotero/translation-server translation-server`
+1. `git clone --recurse-submodules --jobs 4 https://github.com/zotero/translation-server`
 
 1. `cd translation-server`
 
-1. `npm i`
+1. `npm install`
 
 ## Running via Node.js
 
@@ -34,6 +34,16 @@ Deploy:
 ```
 
 You can view the API Gateway endpoint in the Outputs section of the CloudFormation stack in the AWS Console.
+
+## Proxy Support
+
+You can configure `translation-server` to use a proxy server by setting the `HTTP_PROXY` and `HTTPS_PROXY` environment variables:
+
+`HTTP_PROXY=http://proxy.example.com:8080 HTTPS_PROXY=http://proxy.example.com:8080 npm start`
+
+If your proxy server uses a self-signed certificate, you can set `NODE_TLS_REJECT_UNAUTHORIZED=0` to force Node to ignore certificate errors.
+
+It’s also possible to opt out of proxying for specific hosts by using the `NO_PROXY` variable. See the [Node `request` library documentation](https://github.com/request/request#controlling-proxy-behaviour-using-environment-variables) for more details.
 
 ## Running tests
 

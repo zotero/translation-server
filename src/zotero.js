@@ -25,6 +25,7 @@
 
 const path = require('path');
 const config = require('config');
+const fs = require('fs');
 
 const ZOTERO_CONFIG = {
 	REPOSITORY_URL: 'https://repo.zotero.org/repo',
@@ -40,7 +41,9 @@ var Zotero = global.Zotero = module.exports = new function() {
 	this.isNode = true;
 	this.isServer = true;
 	this.locale = 'en-US';
-	this.version = require('../package.json').version;
+	
+	let rdfData = fs.readFileSync(path.resolve(__dirname, '../modules/zotero/install.rdf')).toString();
+	this.version = rdfData.match('version>([0-9].+)\\.SOURCE</')[1];
 	
 	/**
 	 * Debug logging function
@@ -109,7 +112,8 @@ Zotero.Translator = require('./translator');
 Zotero.Translate = require('./translation/translate');
 Zotero.Proxies = require('./proxy').Proxies;
 Zotero.Proxy = require('./proxy').Proxy;
-Zotero.CiteProc =  {CSL: Zotero.require('./citeproc.js')};
+Zotero.CiteProc = Zotero.require('./citeproc.js');
+
 var $rdf = require('./rdf/init');
 if(Zotero.RDF) {
 	Zotero.RDF.AJAW = $rdf;
