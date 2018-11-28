@@ -31,6 +31,7 @@ const HTTP = require('./http');
 const Translators = require('./translators');
 const SearchEndpoint = require('./searchEndpoint');
 const { jar: cookieJar } = require('request');
+const Recognizer = require('./recognizer');
 
 const SERVER_TRANSLATION_TIMEOUT = 30;
 const FORWARDED_HEADERS = ['Accept-Language'];
@@ -153,19 +154,39 @@ WebSession.prototype.handleURL = async function () {
 		translate.setRequestHeaders(headers);
 		
 		try {
-			await HTTP.processDocuments(
-				[url],
-				(doc) => {
-					translate.setDocument(doc);
-					// This could be optimized by only running detect on secondary translators
-					// if the first fails, but for now just run detect on all
-					return translate.getTranslators(true);
-				},
+			let req = await Zotero.HTTP.request(
+				"GET",
+				url,
 				{
+					responseType: 'document',
+					fallbackToPDF: true,
 					cookieSandbox: this._cookieSandbox,
 					headers
 				}
 			);
+			if (req.type === 'document') {
+				translate.setDocument(req.response);
+				// This could be optimized by only running detect on secondary translators
+				// if the first fails, but for now just run detect on all
+				translate.getTranslators(true);
+			}
+			// If PDF received
+			else {
+				let uploadID;
+				try {
+					uploadID = await Recognizer.upload(req.response);
+					let item = await Recognizer.recognize(uploadID);
+					this.ctx.response.body = Zotero.Utilities.itemToAPIJSON(item);
+					resolve();
+				}
+				catch (e) {
+					throw e;
+				}
+				finally {
+					if (uploadID) await Recognizer.remove(uploadID);
+				}
+			}
+			
 			return promise;
 		}
 		catch (e) {

@@ -3,9 +3,17 @@
 	"blacklistedDomains": [],
 	"deproxifyURLs": false, // Automatically try deproxified versions of URLs
 	"identifierSearchLambda": "", // Identifier search Lambda function for text search
+	"recognizerLambda": "", // PDF recognizer Lambda function
 	"port": 1969,
 	"translators": {
 		"CrossrefREST.email": "" // Pass an email to Crossref REST API to utilize the faster servers pool
+	},
+	"s3Upload": {
+		"params": {
+			"Bucket": ""
+		},
+		"accessKeyId": "",
+		"secretAccessKey": ""
 	},
 	"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:61.0) Gecko/20100101 Firefox/61.0",
 	"translatorsDirectory": "./modules/translators"
