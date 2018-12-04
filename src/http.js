@@ -236,13 +236,16 @@ Zotero.HTTP = new function() {
 	 * @param {CookieJar} [cookieSandbox] Cookie sandbox object
 	 * @return {Promise<Array>} - A promise for an array of results from the processor runs
 	 */
-	this.processDocuments = async function (urls, processor, cookieSandbox) {
+	this.processDocuments = async function (urls, processor, options = {}) {
 		// Handle old signature: urls, processor, onDone, onError
 		if (arguments.length > 3) {
 			Zotero.debug("Zotero.HTTP.processDocuments() now takes only 2 arguments -- update your code");
 			var onDone = arguments[3];
 			var onError = arguments[4];
 		}
+		
+		var cookieSandbox = options.cookieSandbox;
+		var headers = options.headers;
 		
 		if (typeof urls == "string") urls = [urls];
 		var funcs = urls.map(url => () => {
@@ -251,7 +254,8 @@ Zotero.HTTP = new function() {
 				url,
 				{
 					responseType: 'document',
-					cookieSandbox
+					cookieSandbox,
+					headers
 				}
 			)
 			.then((req) => {

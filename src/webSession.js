@@ -33,6 +33,7 @@ const SearchEndpoint = require('./searchEndpoint');
 const { jar: cookieJar } = require('request');
 
 const SERVER_TRANSLATION_TIMEOUT = 30;
+const FORWARDED_HEADERS = ['Accept-Language'];
 
 var WebSession = module.exports = function (ctx, next, data, options) {
 	this.ctx = ctx;
@@ -51,6 +52,15 @@ WebSession.prototype.handleURL = async function () {
 	}
 	
 	var url = this.data;
+	
+	// Forward supported headers
+	var headers = {};
+	for (let header of FORWARDED_HEADERS) {
+		let lc = header.toLowerCase();
+		if (this.ctx.headers[lc]) {
+			headers[header] = this.ctx.headers[lc];
+		}
+	}
 	
 	try {
 		var parsedURL = urlLib.parse(url);
@@ -140,6 +150,7 @@ WebSession.prototype.handleURL = async function () {
 			resolve();
 		});
 		translate.setCookieSandbox(this._cookieSandbox);
+		translate.setRequestHeaders(headers);
 		
 		try {
 			await HTTP.processDocuments(
@@ -150,7 +161,10 @@ WebSession.prototype.handleURL = async function () {
 					// if the first fails, but for now just run detect on all
 					return translate.getTranslators(true);
 				},
-				this._cookieSandbox
+				{
+					cookieSandbox: this._cookieSandbox,
+					headers
+				}
 			);
 			return promise;
 		}
