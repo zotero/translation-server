@@ -10,9 +10,8 @@
   },
   "dependencies": {
     "aws-sdk": "^2.326.0",
-    "cheerio": "^1.0.0-rc.2",
     "config": "^1.30.0",
-    "jsdom": "^13.0.0",
+    "jsdom": "git+https://github.com/jsdom/jsdom.git#172d587",
     "koa": "^2.5.1",
     "koa-bodyparser": "^4.2.1",
     "koa-route": "^3.2.0",
