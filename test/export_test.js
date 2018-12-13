@@ -16,4 +16,20 @@ describe("/export", function () {
 			.expect(200);
 		assert.isTrue(response.text.startsWith('TY  - NEWS'));
 	});
+	
+	it("should export CSL JSON", async function () {
+		var date = "2017-06-29T15:02:20Z";
+		var json = [{
+			"itemType": "journalArticle",
+			"extra": `original-date: ${date}`
+		}];
+		var response = await request()
+			.post('/export?format=csljson')
+			.send(json)
+			.expect(200)
+			.expect('Content-Type', 'application/json');
+		assert.equal(response.body[0].type, 'article-journal');
+		// TODO: Put in 'original-date' property
+		assert.equal(response.body[0].note, `original-date: ${date}`);
+	});
 });
