@@ -108,15 +108,10 @@ module.exports = {
 		}
 		
 		ctx.response.body = [];
-	}
-};
-
-
-async function search(query, start) {
-	const numResults = 3;
-	let identifiers;
-	let moreResults = false;
-	try {
+	},
+	
+	// Expose for stubbing in tests
+	queryLambda: async function (query) {
 		let params = {
 			FunctionName: config.get('identifierSearchLambda'),
 			InvocationType: 'RequestResponse',
@@ -130,6 +125,17 @@ async function search(query, start) {
 		}
 		
 		identifiers = JSON.parse(result.Payload);
+		return identifiers;
+	}
+};
+
+
+async function search(query, start) {
+	const numResults = 3;
+	let identifiers;
+	let moreResults = false;
+	try {
+		identifiers = await module.exports.queryLambda(query);
 		
 		// If passed a start= parameter, skip ahead
 		let startPos = 0;

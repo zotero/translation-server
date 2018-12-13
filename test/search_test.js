@@ -1,4 +1,6 @@
+const config = require('config');
 const HTTP = require('../src/http');
+const TextSearch = require('../src/textSearch');
 const path = require('path');
 const fs = require('fs');
 const urlParse = require('url');
@@ -8,25 +10,13 @@ describe("/search", function () {
 	var bookISBN1 = '9781421402833';
 	
 	beforeEach(() => {
-		var origHTTPRequest = HTTP.request;
+		var origHTTPRequest = HTTP.request.bind(HTTP);
 		sinon.stub(HTTP, 'request').callsFake(async function (method, url, options) {
 			if (url.startsWith('http://127.0.0.1')) {
 				return origHTTPRequest(method, url, options);
 			}
 			
 			Zotero.debug("Mocking request");
-			
-			// Mock identifier-search request
-			if (url.startsWith('http://identifier-search')) {
-				Zotero.debug('=-=-=');
-				let parts = urlParse.parse(url, true);
-				if (parts.query.q == bookTitle1.toLowerCase()) {
-					return {
-						status: 200,
-						responseText: `[{"ISBN":"${bookISBN1}"}]`
-					};
-				}
-			}
 			
 			// Mock Library of Congress ISBN lookup
 			if (url.startsWith('http://lx2.loc.gov')) {
@@ -44,14 +34,26 @@ describe("/search", function () {
 			
 			throw new Error("Unhandled request");
 		});
+		
+		// Mock identifier-search Lambda call
+		var origQueryLambda = TextSearch.queryLambda.bind(TextSearch);
+		sinon.stub(TextSearch, 'queryLambda').callsFake(function (query) {
+			if (query == bookTitle1.toLowerCase()) {
+				return Promise.resolve([{"ISBN":"${bookISBN1}"}]);
+			}
+			return origQueryLambda(query);
+		});
 	});
 	
 	afterEach(() => {
 		HTTP.request.restore();
+		TextSearch.queryLambda.restore();
 	});
 	
 	
 	it("should perform a text search", async function () {
+		config.identifierSearchLambda = 'IdentifierSearch';
+		
 		var response = await request()
 			.post('/search')
 			.set('Content-Type', 'text/plain')
