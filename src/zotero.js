@@ -25,6 +25,7 @@
 
 const path = require('path');
 const config = require('config');
+const fs = require('fs');
 
 const ZOTERO_CONFIG = {
 	REPOSITORY_URL: 'https://repo.zotero.org/repo',
@@ -36,10 +37,13 @@ const ZOTERO_CONFIG = {
 	API_URL: 'https://api.zotero.org/',
 };
 
-var Zotero = module.exports = new function() {
+var Zotero = global.Zotero = module.exports = new function() {
 	this.isNode = true;
 	this.isServer = true;
 	this.locale = 'en-US';
+	
+	let rdfData = fs.readFileSync(path.resolve(__dirname, '../modules/zotero/install.rdf')).toString();
+	this.version = rdfData.match('version>([0-9].+)\\.SOURCE</')[1];
 	
 	/**
 	 * Debug logging function
@@ -60,9 +64,9 @@ var Zotero = module.exports = new function() {
 		// Firefox uses this
 		Zotero.debug(err);
 	}
+	
+	this.setTimeout = setTimeout;
 }
-
-global.Zotero = Zotero;
 
 // TODO: Pref store
 Zotero.Prefs = new function(){
@@ -105,9 +109,12 @@ Zotero.Date = Zotero.require('./date');
 Zotero.OpenURL = Zotero.require('./openurl');
 Zotero.Utilities = require('./utilities');
 Zotero.Translator = require('./translator');
+Zotero.Translate = require('./translation/translate');
 Zotero.Proxies = require('./proxy').Proxies;
 Zotero.Proxy = require('./proxy').Proxy;
-Zotero.CiteProc =  {CSL: Zotero.require('./citeproc.js')};
+Zotero.Cite = Zotero.require('./cite.js');
+Zotero.CiteProc = Zotero.require('./citeproc.js');
+
 var $rdf = require('./rdf/init');
 if(Zotero.RDF) {
 	Zotero.RDF.AJAW = $rdf;
@@ -115,23 +122,3 @@ if(Zotero.RDF) {
 	Zotero.RDF = {AJAW:$rdf};
 }
 Zotero = Object.assign(Zotero, require('./cachedTypes'));
-
-// Providing these for the translation architecture
-var wgxpath = require('wicked-good-xpath');
-global.XPathResult = wgxpath.XPathResultType;
-var { JSDOM } = require('jsdom');
-var dom = new JSDOM('<html></html>');
-wgxpath.install(dom.window, true);
-global.DOMParser = dom.window.DOMParser;
-global.XMLSerializer = require("w3c-xmlserializer/lib/XMLSerializer").interface;
-global.Services = {
-	// nsIVersionComparator
-	vc: {
-		compare: function (a, b) {
-			// Only worry about the major version (4. vs. 5.)
-			var aParts = a.split(/\./g);
-			var bParts = b.split(/\./g);
-			return aParts[0] - bParts[0];
-		}
-	}
-};

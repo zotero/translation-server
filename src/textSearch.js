@@ -24,9 +24,10 @@
 */
 
 const config = require('config');
-const HTTP = require('./http');
 const XRegExp = require('xregexp');
 const md5 = require('md5');
+const AWS = require('aws-sdk');
+const Lambda = new AWS.Lambda({apiVersion: '2015-03-31'});
 
 module.exports = {
 	/**
@@ -35,8 +36,10 @@ module.exports = {
 	 * @return {Promise<undefined>}
 	 */
 	handle: async function (ctx, next) {
-		// If identifier-search server isn't available, return 501
-		if (!config.has('identifierSearchURL') || !config.get("identifierSearchURL")) {
+		// If identifier-search is disabled in the request or unavailable, return 501
+		if (ctx.request.query.text === '0'
+				|| !config.has('identifierSearchLambda')
+				|| !config.get("identifierSearchLambda")) {
 			ctx.throw(501, "No identifiers found", { expose: true });
 		}
 		
@@ -105,6 +108,24 @@ module.exports = {
 		}
 		
 		ctx.response.body = [];
+	},
+	
+	// Expose for stubbing in tests
+	queryLambda: async function (query) {
+		let params = {
+			FunctionName: config.get('identifierSearchLambda'),
+			InvocationType: 'RequestResponse',
+			Payload: JSON.stringify({query})
+		};
+		
+		let result = await Lambda.invoke(params).promise();
+		
+		if (result.FunctionError) {
+			throw new Error('Lambda error: ' + result.Payload);
+		}
+		
+		identifiers = JSON.parse(result.Payload);
+		return identifiers;
 	}
 };
 
@@ -114,14 +135,7 @@ async function search(query, start) {
 	let identifiers;
 	let moreResults = false;
 	try {
-		let xmlhttp = await HTTP.request(
-			"GET",
-			config.get("identifierSearchURL") + encodeURIComponent(query),
-			{
-				timeout: 15000
-			}
-		);
-		identifiers = JSON.parse(xmlhttp.responseText);
+		identifiers = await module.exports.queryLambda(query);
 		
 		// If passed a start= parameter, skip ahead
 		let startPos = 0;

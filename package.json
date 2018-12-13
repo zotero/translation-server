@@ -1,6 +1,6 @@
 {
   "name": "translation-server",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "description": "Zotero translation server",
   "license": "AGPL-3.0-only",
   "main": "index.js",
@@ -9,8 +9,10 @@
     "url": "git+https://github.com/zotero/translation-server-v2"
   },
   "dependencies": {
+    "aws-sdk": "^2.326.0",
+    "cheerio": "^1.0.0-rc.2",
     "config": "^1.30.0",
-    "jsdom": "^11.11.0",
+    "jsdom": "^13.0.0",
     "koa": "^2.5.1",
     "koa-bodyparser": "^4.2.1",
     "koa-route": "^3.2.0",
@@ -20,7 +22,8 @@
     "serverless-http": "^1.6.0",
     "w3c-xmlserializer": "0.0.1",
     "wicked-good-xpath": "git+https://github.com/adomasven/wicked-good-xpath.git#e84d65d",
-    "xregexp": "^4.2.0"
+    "xregexp": "^4.2.0",
+    "yargs": "^12.0.2"
   },
   "devDependencies": {
     "chai": "^4.1.2",
@@ -31,6 +34,6 @@
   "scripts": {
     "start": "node src/server.js",
     "start:debug": "node --inspect src/server.js",
-    "test": "NODE_ENV=test node_modules/.bin/mocha test/*_test.js"
+    "test": "NODE_ENV=test ALLOW_CONFIG_MUTATIONS=1 node_modules/.bin/mocha test/*_test.js"
   }
 }

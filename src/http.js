@@ -29,6 +29,32 @@ var url = require('url');
 var jsdom = require('jsdom');
 var { JSDOM } = jsdom;
 var wgxpath = require('wicked-good-xpath');
+var cheerio = require('cheerio');
+
+/**
+ * Clean text nodes bigger than 50kb
+ *
+ * @param node Cheerio node
+ * @return {boolean} Return true if at least one node was cleaned
+ */
+function cleanNode(node) {
+	let ret = false;
+	if (node.type === 'text') {
+		if (node.data.length > 50 * 1024) {
+			node.data = '';
+			ret = true;
+		}
+	}
+	
+	if (node.children) {
+		for (let child of node.children) {
+			if (cleanNode(child)) {
+				ret = true;
+			}
+		}
+	}
+	return ret;
+}
 
 /**
  * Functions for performing HTTP requests
@@ -117,6 +143,7 @@ Zotero.HTTP = new function() {
 				headers: options.headers,
 				timeout: options.timeout,
 				body: options.body,
+				gzip: true,
 				followAllRedirects: true,
 				jar: options.cookieSandbox
 			}, function(error, response, body) {
@@ -151,7 +178,16 @@ Zotero.HTTP = new function() {
 				};
 				
 				if (options.responseType == 'document') {
-					let dom = new JSDOM(body, { url: result.responseURL });
+					// A quick workaround for JSDOM slowdown when parsing web pages with large
+					// embedded scripts, stylesheets or other text blocks. Otherwise JSDOM
+					// can spend 30s or more by trying to parse them
+					let $ = cheerio.load(body);
+					// Use this workaround only if at least one text node was cleaned
+					if(cleanNode($._root)) {
+						body = $.html();
+					}
+
+					let dom = new JSDOM(body, { url: result.responseURL});
 					wgxpath.install(dom.window, true);
 					result.response = dom.window.document;
 					
@@ -159,7 +195,7 @@ Zotero.HTTP = new function() {
 					if (response.headers['content-type']
 							&& response.headers['content-type'].startsWith('text/html')) {
 						let meta = result.response.querySelector('meta[http-equiv=refresh]');
-						if (meta) {
+						if (meta && meta.getAttribute('content')) {
 							let parts = meta.getAttribute('content').split(/;\s*url=/);
 							// If there's a redirect to another URL in less than 15 seconds,
 							// follow it
@@ -200,13 +236,16 @@ Zotero.HTTP = new function() {
 	 * @param {CookieJar} [cookieSandbox] Cookie sandbox object
 	 * @return {Promise<Array>} - A promise for an array of results from the processor runs
 	 */
-	this.processDocuments = async function (urls, processor, cookieSandbox) {
+	this.processDocuments = async function (urls, processor, options = {}) {
 		// Handle old signature: urls, processor, onDone, onError
 		if (arguments.length > 3) {
 			Zotero.debug("Zotero.HTTP.processDocuments() now takes only 2 arguments -- update your code");
 			var onDone = arguments[3];
 			var onError = arguments[4];
 		}
+		
+		var cookieSandbox = options.cookieSandbox;
+		var headers = options.headers;
 		
 		if (typeof urls == "string") urls = [urls];
 		var funcs = urls.map(url => () => {
@@ -215,7 +254,8 @@ Zotero.HTTP = new function() {
 				url,
 				{
 					responseType: 'document',
-					cookieSandbox
+					cookieSandbox,
+					headers
 				}
 			)
 			.then((req) => {

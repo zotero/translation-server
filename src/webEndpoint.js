@@ -26,8 +26,7 @@
 const WebSession = require('./webSession');
 
 // Timeout for select requests, in seconds
-//const SELECT_TIMEOUT = 120;
-const SELECT_TIMEOUT = 15;
+const SELECT_TIMEOUT = 60;
 const sessionsWaitingForSelection = {};
 
 var requestsSinceGC = 0;
@@ -56,27 +55,44 @@ var WebEndpoint = module.exports = {
 				ctx.throw(400, "'session' not provided");
 			}
 			session = sessionsWaitingForSelection[sessionID];
-			if (!session) {
-				ctx.throw(400, "Session not found");
+			if (session) {
+				delete sessionsWaitingForSelection[sessionID];
+				session.ctx = ctx;
+				session.next = next;
+				session.data = data;
+			} else {
+				let single = !!ctx.request.query.single;
+				session = new WebSession(ctx, next, data.url, { single });
 			}
-			delete sessionsWaitingForSelection[sessionID];
-			session.ctx = ctx;
-			session.next = next;
-			session.data = data;
 		}
 		else {
-			session = new WebSession(ctx, next, data);
-		}
-		
-		if (typeof data != 'object' && !data.match(/^https?:/)) {
-			ctx.throw(400, "URL not provided");
+			// From https://stackoverflow.com/a/3809435, modified to allow up to 9-char TLDs and IP addresses
+			let urlRE = /^(https?:\/\/)?([-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,9}\b|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|\b)){4})(\S*)$/i;
+			
+			if (!data.match(urlRE)) {
+				ctx.throw(400, "URL not provided");
+			}
+			
+			// Prepend 'http://' if not provided
+			if (!data.startsWith('http')) {
+				data = 'http://' + data;
+			}
+			
+			let single = !!ctx.request.query.single;
+			session = new WebSession(ctx, next, data, { single });
 		}
 		
 		await session.handleURL();
 		
-		// Store session if returning multiple choices
 		if (ctx.response.status == 300) {
-			sessionsWaitingForSelection[session.id] = session;
+			if(typeof data == 'object') {
+				// Select item if this was an item selection query
+				session.data = data;
+				await session.handleURL();
+			} else {
+				// Store session if returning multiple choices
+				sessionsWaitingForSelection[session.id] = session;
+			}
 		}
 	}
 };
@@ -85,7 +101,7 @@ var WebEndpoint = module.exports = {
  * Perform garbage collection every 10 requests
  */
 function gc() {
-	if ((++requestsSinceGC) == 3) {
+	if ((++requestsSinceGC) == 10) {
 		for (let i in sessionsWaitingForSelection) {
 			let session = sessionsWaitingForSelection[i];
 			if (session.started && Date.now() >= session.started + SELECT_TIMEOUT * 1000) {

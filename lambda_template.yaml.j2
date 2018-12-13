@@ -13,6 +13,9 @@ Resources:
       Runtime: nodejs8.10
       MemorySize: 2048
       Timeout: 30
+      Policies:
+        - LambdaInvokePolicy:
+           FunctionName: {{ identifier_search_function_name }}
       Events:
         # API Gateway
         API:
