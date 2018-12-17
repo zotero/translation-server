@@ -4,11 +4,12 @@ var TestEndpoint = module.exports = {
 	},
 	
 	handleSingle: async function (ctx, next) {
+		var title = ctx.headers['accept-language'] == 'fr' ? 'Titre' : 'Title';
 		ctx.response.body = `<html>
 			<head>
-				<title>Page Title</title>
+				<title>${title}</title>
 				<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
-				<meta name="citation_title" content="Title"/>
+				<meta name="citation_title" content="${title}"/>
 			</head>
 			<body>Body</body>
 		</html>`;

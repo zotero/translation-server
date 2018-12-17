@@ -80,4 +80,21 @@ describe("/web", function () {
 		assert.equal(response.statusCode, 400);
 		assert.equal(response.text, 'Remote page not found');
 	});
+	
+	
+	// Note: This doesn't test subsequent requests during translation
+	it("should forward the Accept-Language header in the initial request", async function () {
+		var url = testURL + 'single';
+		var response = await request()
+			.post('/web')
+			.set('Content-Type', 'text/plain')
+			.set('Accept-Language', 'fr')
+			.send(url);
+		assert.equal(response.statusCode, 200);
+		var json = response.body;
+		
+		assert.lengthOf(json, 1);
+		assert.equal(json[0].itemType, 'journalArticle');
+		assert.equal(json[0].title, 'Titre');
+	});
 });

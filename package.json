@@ -10,9 +10,8 @@
   },
   "dependencies": {
     "aws-sdk": "^2.326.0",
-    "cheerio": "^1.0.0-rc.2",
     "config": "^1.30.0",
-    "jsdom": "^13.0.0",
+    "jsdom": "^13.1.0",
     "koa": "^2.5.1",
     "koa-bodyparser": "^4.2.1",
     "koa-route": "^3.2.0",
@@ -34,6 +33,6 @@
   "scripts": {
     "start": "node src/server.js",
     "start:debug": "node --inspect src/server.js",
-    "test": "NODE_ENV=test node_modules/.bin/mocha test/*_test.js"
+    "test": "NODE_ENV=test ALLOW_CONFIG_MUTATIONS=1 node_modules/.bin/mocha test/*_test.js"
   }
 }
