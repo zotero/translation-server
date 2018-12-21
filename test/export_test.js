@@ -53,6 +53,22 @@ describe("/export", function () {
 		assert.equal(response.body[0].note, `original-date: ${date}`);
 	});
 	
+	it("should export note as CSL JSON", async function () {
+		var json = [
+			{
+				itemType: "note",
+				note: "Note"
+			}
+		];
+		var response = await request()
+			.post('/export?format=csljson')
+			.send(json)
+			.expect(200)
+			.expect('Content-Type', 'application/json');
+		assert.equal(response.body[0].type, 'article');
+		assert.equal(response.body[0].title, 'Note');
+	});
+	
 	it("should export Zotero RDF", async function () {
 		var response = await request()
 			.post('/export?format=rdf_zotero')
