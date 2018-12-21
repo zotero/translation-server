@@ -79,5 +79,6 @@ describe("/search", function () {
 		assert.equal(json[0].title, bookTitle1);
 		// This note contains keywords that should probably be tags
 		assert.equal(json[1].itemType, 'note');
+		assert.equal(json[1].parentItem, json[0].key);
 	});
 });
