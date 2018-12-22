@@ -175,6 +175,10 @@ WebSession.prototype.handleURL = async function () {
 				this.ctx.throw(400, "Remote page not found");
 			}
 			
+			if (e instanceof Zotero.HTTP.ResponseSizeError) {
+				this.ctx.throw(400, "Response exceeds max size");
+			}
+			
 			//Parse URL up to '?' for DOI
 			let doi = Zotero.Utilities.cleanDOI(decodeURIComponent(url).match(/[^\?]+/)[0]);
 			if (doi) {

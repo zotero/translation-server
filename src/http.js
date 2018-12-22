@@ -47,77 +47,10 @@ Zotero.HTTP = new function() {
 	};
 	this.TimeoutError.prototype = Object.create(Error.prototype);
 	
-	/**
-	 * request.js doesn't support response size limitation, therefore
-	 * we have to do it manually
-	 *
-	 * @param {String} method
-	 * @param {String} requestURL
-	 * @param {Object} options
-	 * @return {Promise<Object>} response, body
-	 */
-	this.customRequest = function (method, requestURL, options) {
-		return new Promise(function (resolve, reject) {
-			let response;
-			
-			// Make sure resolve/reject is called only once even if request.js
-			// is emitting events when it shouldn't
-			let returned = false;
-			
-			// Store buffers in array, because concatenation operation is is unbelievably slow
-			let buffers = [];
-			let bufferLength = 0;
-			
-			let req = request({
-				uri: requestURL,
-				method,
-				headers: options.headers,
-				timeout: options.timeout,
-				body: options.body,
-				gzip: true,
-				followAllRedirects: true,
-				jar: options.cookieSandbox,
-				encoding: null // Get body in a buffer
-			})
-				.on('error', function (err) {
-					if (returned) return;
-					reject(err);
-				})
-				.on('data', function (chunk) {
-					if (returned) return;
-					
-					bufferLength += chunk.length;
-					buffers.push(chunk);
-					
-					if (bufferLength > options.maxResponseSize) {
-						req.abort();
-						returned = true;
-						reject(new Error('Response exceeds max size'));
-					}
-				})
-				.on('response', function (res) {
-					if (returned) return;
-					response = res;
-					// Content-length doesn't always exists or it can be a length of a gzipped content,
-					// but it's still worth to do the initial size check
-					if (
-						response.headers['content-length'] !== undefined &&
-						response.headers['content-length'] > options.maxResponseSize
-					) {
-						req.abort();
-						returned = true;
-						reject(new Error('Response exceeds max size'));
-					}
-					
-					// TODO: Filter content-type too
-				})
-				.on('end', function () {
-					if (returned) return;
-					returned = true;
-					resolve({response, body: Buffer.concat(buffers, bufferLength)});
-				});
-		});
+	this.ResponseSizeError = function(url) {
+		this.message = `${url} response exceeds max size`;
 	};
+	this.ResponseSizeError.prototype = Object.create(Error.prototype);
 	
 	/**
 	 * Get a promise for a HTTP request
@@ -183,7 +116,7 @@ Zotero.HTTP = new function() {
 		}
 		Zotero.debug(`HTTP ${method} ${requestURL}${logBody}`);
 		
-		let {response, body} = await this.customRequest(method, requestURL, options);
+		let {response, body} = await customRequest(method, requestURL, options);
 		
 		if (!response.headers['content-type']) {
 			return reject(new Error('Missing content-type header'));
@@ -362,5 +295,77 @@ Zotero.HTTP = new function() {
 		return true;
 	};
 }
+
+/**
+ * request.js doesn't support response size limitation, therefore
+ * we have to do it manually
+ *
+ * @param {String} method
+ * @param {String} requestURL
+ * @param {Object} options
+ * @return {Promise<Object>} response, body
+ */
+function customRequest(method, requestURL, options) {
+	return new Promise(function (resolve, reject) {
+		let response;
+		
+		// Make sure resolve/reject is called only once even if request.js
+		// is emitting events when it shouldn't
+		let returned = false;
+		
+		// Store buffers in array, because concatenation operation is is unbelievably slow
+		let buffers = [];
+		let bufferLength = 0;
+		
+		let req = request({
+			uri: requestURL,
+			method,
+			headers: options.headers,
+			timeout: options.timeout,
+			body: options.body,
+			gzip: true,
+			followAllRedirects: true,
+			jar: options.cookieSandbox,
+			encoding: null // Get body in a buffer
+		})
+			.on('error', function (err) {
+				if (returned) return;
+				reject(err);
+			})
+			.on('data', function (chunk) {
+				if (returned) return;
+				
+				bufferLength += chunk.length;
+				buffers.push(chunk);
+				
+				if (bufferLength > options.maxResponseSize) {
+					req.abort();
+					returned = true;
+					reject(new Zotero.HTTP.ResponseSizeError(requestURL));
+				}
+			})
+			.on('response', function (res) {
+				if (returned) return;
+				response = res;
+				// Content-length doesn't always exists or it can be a length of a gzipped content,
+				// but it's still worth to do the initial size check
+				if (
+					response.headers['content-length'] !== undefined &&
+					response.headers['content-length'] > options.maxResponseSize
+				) {
+					req.abort();
+					returned = true;
+					reject(new Zotero.HTTP.ResponseSizeError(requestURL));
+				}
+				
+				// TODO: Filter content-type too
+			})
+			.on('end', function () {
+				if (returned) return;
+				returned = true;
+				resolve({response, body: Buffer.concat(buffers, bufferLength)});
+			});
+	});
+};
 
 module.exports = Zotero.HTTP;
