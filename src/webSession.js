@@ -179,6 +179,10 @@ WebSession.prototype.handleURL = async function () {
 				this.ctx.throw(400, "Response exceeds max size");
 			}
 			
+			if (e instanceof Zotero.HTTP.UnsupportedFormatError) {
+				this.ctx.throw(400, "The remote document is not in a supported format");
+			}
+			
 			//Parse URL up to '?' for DOI
 			let doi = Zotero.Utilities.cleanDOI(decodeURIComponent(url).match(/[^\?]+/)[0]);
 			if (doi) {

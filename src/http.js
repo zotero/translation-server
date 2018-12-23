@@ -52,6 +52,11 @@ Zotero.HTTP = new function() {
 	};
 	this.ResponseSizeError.prototype = Object.create(Error.prototype);
 	
+	this.UnsupportedFormatError = function (url, msg) {
+		this.message = msg;
+	};
+	this.UnsupportedFormatError.prototype = Object.create(Error.prototype);
+	
 	/**
 	 * Get a promise for a HTTP request
 	 *
@@ -119,7 +124,7 @@ Zotero.HTTP = new function() {
 		let {response, body} = await customRequest(method, requestURL, options);
 		
 		if (!response.headers['content-type']) {
-			return reject(new Error('Missing content-type header'));
+			throw new this.UnsupportedFormatError(requestURL, 'Missing Content-Type header');
 		}
 		
 		// Array of success codes given
@@ -149,12 +154,22 @@ Zotero.HTTP = new function() {
 		};
 		
 		if (options.responseType == 'document') {
-			let dom = new JSDOM(body, {
-				url: result.responseURL,
-				// Inform JSDOM what content type it's parsing,
-				// so it could reject unsupported content types
-				contentType: response.headers['content-type']
-			});
+			let dom;
+			try {
+				dom = new JSDOM(body, {
+					url: result.responseURL,
+					// Inform JSDOM what content type it's parsing,
+					// so it could reject unsupported content types
+					contentType: response.headers['content-type']
+				});
+			}
+			catch (e) {
+				if (e.message.includes('not a HTML or XML content type')) {
+					Zotero.debug(e, 1)
+					throw new this.UnsupportedFormatError(result.responseURL, e.message);
+				}
+				throw e;
+			}
 			wgxpath.install(dom.window, true);
 			result.response = dom.window.document;
 			
