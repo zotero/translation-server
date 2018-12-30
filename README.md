@@ -1,5 +1,7 @@
 # Zotero Translation Server v2
 
+[![Build Status](https://travis-ci.com/zotero/translation-server.svg?branch=master)](https://travis-ci.com/zotero/translation-server)
+
 The Zotero translation server lets you use [Zotero translators](https://www.zotero.org/support/translators) without the Zotero client.
 
 ## Installation
