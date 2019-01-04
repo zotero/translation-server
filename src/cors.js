@@ -15,6 +15,8 @@ module.exports = async (ctx, next) => {
 			set("Access-Control-Allow-Headers", "Content-Type");
 			set("Access-Control-Expose-Headers", "Link");
 		}
+		// Force a 200 on API Gateway
+		ctx.body = '';
 	}
 	try {
 		await next();
