@@ -6,8 +6,11 @@ const fs = require('fs');
 const urlParse = require('url');
 
 describe("/search", function () {
-	var bookTitle1 = 'The expert cook in enlightenment France';
 	var bookISBN1 = '9781421402833';
+	var bookTitle1 = 'The expert cook in enlightenment France';
+	
+	var articlePMID1 = '30571677';
+	var articleTitle1 = 'Ten simple rules for documenting scientific software';
 	
 	beforeEach(() => {
 		var origHTTPRequest = HTTP.request.bind(HTTP);
@@ -17,6 +20,16 @@ describe("/search", function () {
 			}
 			
 			Zotero.debug("Mocking request");
+			
+			if (url.startsWith('https://www.crossref.org')) {
+				return {
+					status: 200,
+					responseText: '<?xml version="1.0" encoding="UTF-8"?>'
+						+ '<doi_records><doi_record key="555-555"><crossref>'
+						+ '<error>Either ISSN or Journal title or Proceedings title must be supplied.</error>'
+						+ '</crossref></doi_record></doi_records>'
+				};
+			}
 			
 			// Mock Library of Congress ISBN lookup
 			if (url.startsWith('http://lx2.loc.gov')) {
@@ -32,6 +45,20 @@ describe("/search", function () {
 				};
 			}
 			
+			if (url.startsWith('https://eutils.ncbi.nlm.nih.gov')) {
+				let xml = fs.readFileSync(
+					path.join(__dirname, 'data', 'pubmed_article1_response.xml'),
+					{
+						encoding: 'utf-8'
+					}
+				);
+				return {
+					status: 200,
+					responseText: xml
+				};
+			}
+			
+			Zotero.debug("Unhandled request");
 			throw new Error("Unhandled request");
 		});
 		
@@ -80,5 +107,32 @@ describe("/search", function () {
 		// This note contains keywords that should probably be tags
 		assert.equal(json[1].itemType, 'note');
 		assert.equal(json[1].parentItem, json[0].key);
+	});
+	
+	
+	it("should translate a PMID", async function () {
+		var response = await request()
+			.post('/search')
+			.set('Content-Type', 'text/plain')
+			.send(articlePMID1);
+		assert.equal(response.statusCode, 200);
+		var json = response.body;
+		
+		assert.lengthOf(json, 1);
+		assert.equal(json[0].itemType, 'journalArticle');
+		assert.equal(json[0].title, articleTitle1);
+	});
+	
+	it("should translate a PMID with 'pmid:' prefix", async function () {
+		var response = await request()
+			.post('/search')
+			.set('Content-Type', 'text/plain')
+			.send('pmid:' + articlePMID1);
+		assert.equal(response.statusCode, 200);
+		var json = response.body;
+		
+		assert.lengthOf(json, 1);
+		assert.equal(json[0].itemType, 'journalArticle');
+		assert.equal(json[0].title, articleTitle1);
 	});
 });
