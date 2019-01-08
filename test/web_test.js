@@ -97,4 +97,24 @@ describe("/web", function () {
 		assert.equal(json[0].itemType, 'journalArticle');
 		assert.equal(json[0].title, 'Titre');
 	});
+	
+	it("should reject non-HTML/XML upstream content types", async function () {
+		var url = testURL + 'invalidContentType';
+		var response = await request()
+			.post('/web')
+			.set('Content-Type', 'text/plain')
+			.send(url);
+		assert.equal(response.statusCode, 400);
+		assert.equal(response.text, "The remote document is not in a supported format");
+	});
+	
+	it("should reject missing upstream Content-Type header", async function () {
+		var url = testURL + 'missingContentType';
+		var response = await request()
+			.post('/web')
+			.set('Content-Type', 'text/plain')
+			.send(url);
+		assert.equal(response.statusCode, 400);
+		assert.equal(response.text, "The remote document is not in a supported format");
+	});
 });

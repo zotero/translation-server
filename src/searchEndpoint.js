@@ -40,8 +40,9 @@ var SearchEndpoint = module.exports = {
 		// Look for DOI, ISBN, etc.
 		var identifiers = Zotero.Utilities.Internal.extractIdentifiers(data);
 		
-		// Use PMID only if it's the only text in the query
-		if (identifiers.length && identifiers[0].PMID && identifiers[0].PMID !== data.trim()) {
+		// Use PMID only if it's the only text in the query, with or without a pmid: prefix
+		if (identifiers.length && identifiers[0].PMID
+				&& identifiers[0].PMID !== data.replace(/^\s*(?:pmid:)?([0-9]+)\s*$/, '$1')) {
 			identifiers = [];
 		}
 		

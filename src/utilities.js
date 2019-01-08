@@ -143,8 +143,11 @@ Zotero.Utilities.itemToAPIJSON = function(item) {
 					}
 					note = note.note;
 				}
-				newItems.push({"itemType":"note", "parentItem":newItem.itemKey,
-					"note":note.toString()});
+				newItems.push({
+					itemType: "note",
+					parentItem: newItem.key,
+					note: note.toString()
+				});
 			}
 		} else if((fieldID = Zotero.ItemFields.getID(field))) {
 			// if content is not a string, either stringify it or delete it
