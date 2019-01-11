@@ -69,6 +69,21 @@ describe("/export", function () {
 		assert.equal(response.body[0].title, 'Note');
 	});
 	
+	it("should export Bibliontology RDF", async function () {
+		var response = await request()
+			.post('/export?format=rdf_bibliontology')
+			.send(json)
+			.expect(200)
+			.expect('Content-Type', 'application/rdf+xml');
+		var dp = new DOMParser();
+		var doc = dp.parseFromString(response.text, 'text/xml');
+		assert.equal(doc.documentElement.localName, 'RDF');
+		assert.equal(
+			doc.querySelector('bibo\\:Issue dcterms\\:isPartOf bibo\\:Newspaper dcterms\\:title').textContent,
+			'The New York Times'
+		);
+	});
+	
 	it("should export Zotero RDF", async function () {
 		var response = await request()
 			.post('/export?format=rdf_zotero')
