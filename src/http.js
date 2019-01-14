@@ -143,7 +143,6 @@ Zotero.HTTP = new function() {
 				headers: options.headers,
 				timeout: options.timeout,
 				body: options.body,
-				gzip: true,
 				followAllRedirects: true,
 				jar: options.cookieSandbox
 			}, function(error, response, body) {
