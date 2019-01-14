@@ -239,7 +239,7 @@ Zotero.Utilities.itemToLegacyExportFormat = function(item) {
 	item.sourceItemKey = item.parentItem;
 	
 	// Tags
-	for (let i=0; i<item.tags.length; i++) {
+	for (let i=0; item.tags && i<item.tags.length; i++) {
 		if (!item.tags[i].type) {
 			item.tags[i].type = 0;
 		}
