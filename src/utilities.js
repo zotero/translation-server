@@ -235,15 +235,23 @@ Zotero.Utilities.itemToLegacyExportFormat = function(item) {
 			// translator ever used it
 		}
 	}
+	else {
+		item.creators = [];
+	}
 	
 	item.sourceItemKey = item.parentItem;
 	
 	// Tags
-	for (let i=0; item.tags && i<item.tags.length; i++) {
-		if (!item.tags[i].type) {
-			item.tags[i].type = 0;
+	if (item.tags) {
+		for (let i = 0; i < item.tags.length; i++) {
+			if (!item.tags[i].type) {
+				item.tags[i].type = 0;
+			}
+			// No translator ever used "primary", "fields", or "linkedItems" objects
 		}
-		// No translator ever used "primary", "fields", or "linkedItems" objects
+	}
+	else {
+		item.tags = [];
 	}
 	
 	// seeAlso was always present, but it was always an empty array.
