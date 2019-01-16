@@ -143,8 +143,11 @@ Zotero.Utilities.itemToAPIJSON = function(item) {
 					}
 					note = note.note;
 				}
-				newItems.push({"itemType":"note", "parentItem":newItem.itemKey,
-					"note":note.toString()});
+				newItems.push({
+					itemType: "note",
+					parentItem: newItem.key,
+					note: note.toString()
+				});
 			}
 		} else if((fieldID = Zotero.ItemFields.getID(field))) {
 			// if content is not a string, either stringify it or delete it
@@ -183,6 +186,88 @@ Zotero.Utilities.itemToAPIJSON = function(item) {
 	
 	return newItems;
 };
+
+Zotero.Utilities.itemToLegacyExportFormat = function(item) {
+	item.uniqueFields = {};
+	
+	// Map base fields
+	for (let field in item) {
+		try {
+			var baseField = Zotero.ItemFields.getName(
+				Zotero.ItemFields.getBaseIDFromTypeAndField(item.itemType, field)
+			);
+		} catch (e) {
+			continue;
+		}
+		
+		if (!baseField || baseField == field) {
+			item.uniqueFields[field] = item[field];
+		} else {
+			item[baseField] = item[field];
+			item.uniqueFields[baseField] = item[field];
+		}
+	}
+	
+	// Meaningless local item ID, but some older export translators depend on it
+	item.itemID = Zotero.Utilities.randomString(6);
+	item.key = Zotero.Utilities.randomString(6); // CSV translator exports this
+	
+	// "version" is expected to be a field for "computerProgram", which is now
+	// called "versionNumber"
+	delete item.version;
+	if (item.versionNumber) {
+		item.version = item.uniqueFields.version = item.versionNumber;
+		delete item.versionNumber;
+	}
+
+	// Creators
+	if (item.creators) {
+		for (let i=0; i<item.creators.length; i++) {
+			let creator = item.creators[i];
+			
+			if (creator.name) {
+				creator.fieldMode = 1;
+				creator.lastName = creator.name;
+				delete creator.name;
+			}
+			
+			// Old format used to supply creatorID (the database ID), but no
+			// translator ever used it
+		}
+	}
+	else {
+		item.creators = [];
+	}
+	
+	item.sourceItemKey = item.parentItem;
+	
+	// Tags
+	if (item.tags) {
+		for (let i = 0; i < item.tags.length; i++) {
+			if (!item.tags[i].type) {
+				item.tags[i].type = 0;
+			}
+			// No translator ever used "primary", "fields", or "linkedItems" objects
+		}
+	}
+	else {
+		item.tags = [];
+	}
+	
+	// seeAlso was always present, but it was always an empty array.
+	// Zotero RDF translator pretended to use it
+	item.seeAlso = [];
+	
+	if (item.contentType) {
+		item.mimeType = item.uniqueFields.mimeType = item.contentType;
+	}
+	
+	if (item.note) {
+		item.uniqueFields.note = item.note;
+	}
+	
+	return item;
+}
 
 module.exports = Zotero.Utilities;
 

@@ -25,5 +25,14 @@ var TestEndpoint = module.exports = {
 	
 	handleRedirect: async function (ctx, next) {
 		ctx.redirect('/test/single');
+	},
+	
+	invalidContentType: async function (ctx, next) {
+		ctx.set('Content-Type', 'image/jpeg');
+		ctx.response.body = '';
+	},
+	
+	missingContentType: async function (ctx, next) {
+		ctx.response.body = null;
 	}
 };

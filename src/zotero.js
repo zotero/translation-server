@@ -114,6 +114,7 @@ Zotero.Proxies = require('./proxy').Proxies;
 Zotero.Proxy = require('./proxy').Proxy;
 Zotero.Cite = Zotero.require('./cite.js');
 Zotero.CiteProc = Zotero.require('./citeproc.js');
+Zotero.Notes = Zotero.require('./data/notes.js');
 
 var $rdf = require('./rdf/init');
 if(Zotero.RDF) {

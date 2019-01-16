@@ -50,6 +50,9 @@ ItemGetter.prototype = {
 	"nextItem":function() {
 		if(!this._itemsLeft.length) return false;
 		var item = this._itemsLeft.shift();
+		if (this.legacy) {
+			item = Zotero.Utilities.itemToLegacyExportFormat(item);
+		}
 		if (!item.attachments) {
 			item.attachments = [];
 		}

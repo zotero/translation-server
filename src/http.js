@@ -29,32 +29,6 @@ var url = require('url');
 var jsdom = require('jsdom');
 var { JSDOM } = jsdom;
 var wgxpath = require('wicked-good-xpath');
-var cheerio = require('cheerio');
-
-/**
- * Clean text nodes bigger than 50kb
- *
- * @param node Cheerio node
- * @return {boolean} Return true if at least one node was cleaned
- */
-function cleanNode(node) {
-	let ret = false;
-	if (node.type === 'text') {
-		if (node.data.length > 50 * 1024) {
-			node.data = '';
-			ret = true;
-		}
-	}
-	
-	if (node.children) {
-		for (let child of node.children) {
-			if (cleanNode(child)) {
-				ret = true;
-			}
-		}
-	}
-	return ret;
-}
 
 /**
  * Functions for performing HTTP requests
@@ -72,6 +46,16 @@ Zotero.HTTP = new function() {
 		this.message = `HTTP request has timed out after ${ms}ms`;
 	};
 	this.TimeoutError.prototype = Object.create(Error.prototype);
+	
+	this.ResponseSizeError = function(url) {
+		this.message = `${url} response exceeds max size`;
+	};
+	this.ResponseSizeError.prototype = Object.create(Error.prototype);
+	
+	this.UnsupportedFormatError = function (url, msg) {
+		this.message = msg;
+	};
+	this.UnsupportedFormatError.prototype = Object.create(Error.prototype);
 	
 	/**
 	 * Get a promise for a HTTP request
@@ -93,7 +77,7 @@ Zotero.HTTP = new function() {
 	 * 		- headers {Object}
 	 * 		- statusCode {Number}
 	 */
-	this.request = function(method, requestURL, options = {}) {
+	this.request = async function(method, requestURL, options = {}) {
 		// Default options
 		options = Object.assign({
 			body: null,
@@ -103,7 +87,8 @@ Zotero.HTTP = new function() {
 			logBodyLength: 1024,
 			timeout: 15000,
 			responseType: '',
-			successCodes: null
+			successCodes: null,
+			maxResponseSize: 50 * 1024 * 1024
 		}, options);
 		
 		options.headers = Object.assign({
@@ -126,7 +111,7 @@ Zotero.HTTP = new function() {
 				// Allow XHR to set Content-Type with boundary for multipart/form-data
 				delete options.headers["Content-Type"];
 			}
-					
+			
 			logBody = `: ${options.body.substr(0, options.logBodyLength)}` +
 					options.body.length > options.logBodyLength ? '...' : '';
 			// TODO: make sure below does its job in every API call instance
@@ -136,95 +121,91 @@ Zotero.HTTP = new function() {
 		}
 		Zotero.debug(`HTTP ${method} ${requestURL}${logBody}`);
 		
-		return new Promise(function(resolve, reject) {
-			request({
-				uri: requestURL,
-				method,
-				headers: options.headers,
-				timeout: options.timeout,
-				body: options.body,
-				followAllRedirects: true,
-				jar: options.cookieSandbox
-			}, function(error, response, body) {
-				if (error) {
-					return reject(error);
-				}
-				
-				// Array of success codes given
-				if (options.successCodes) {
-					var success = options.successCodes.includes(response.statusCode);
-				}
-				// Explicit FALSE means allow any status code
-				else if (options.successCodes === false) {
-					var success = true;
-				}
-				// Otherwise, 2xx is success
-				else {
-					var success = response.statusCode >= 200 && response.statusCode < 300;
-				}
-				if (!success) {
-					return reject(new Zotero.HTTP.StatusError(requestURL, response.statusCode, response.body));
-				}
-
-				if (options.debug) {
-					Zotero.debug(`HTTP ${response.statusCode} response: ${body}`);
-				}
-				
-				var result = {
-					responseURL: response.request.uri.href,
-					headers: response.headers,
-					status: response.statusCode
-				};
-				
-				if (options.responseType == 'document') {
-					// A quick workaround for JSDOM slowdown when parsing web pages with large
-					// embedded scripts, stylesheets or other text blocks. Otherwise JSDOM
-					// can spend 30s or more by trying to parse them
-					let $ = cheerio.load(body);
-					// Use this workaround only if at least one text node was cleaned
-					if(cleanNode($._root)) {
-						body = $.html();
-					}
-
-					let dom = new JSDOM(body, { url: result.responseURL});
-					wgxpath.install(dom.window, true);
-					result.response = dom.window.document;
-					
-					// Follow meta redirects
-					if (response.headers['content-type']
-							&& response.headers['content-type'].startsWith('text/html')) {
-						let meta = result.response.querySelector('meta[http-equiv=refresh]');
-						if (meta && meta.getAttribute('content')) {
-							let parts = meta.getAttribute('content').split(/;\s*url=/);
-							// If there's a redirect to another URL in less than 15 seconds,
-							// follow it
-							if (parts.length == 2 && parseInt(parts[0]) <= 15) {
-								let newURL = parts[1].trim().replace(/^'(.+)'/, '$1');
-								newURL = url.resolve(requestURL, newURL);
-								
-								Zotero.debug("Meta refresh to " + newURL);
-								result = Zotero.HTTP.request(method, newURL, options);
-							}
-						}
-					}
-				}
-				else if (options.responseType == 'json') {
-					result.response = JSON.parse(body);
-				}
-				else if (!options.responseType || options.responseType == 'text') {
-					result.response = body;
-					result.responseText = body;
-				}
-				else {
-					throw new Error("Invalid responseType");
-				}
-				
-				return resolve(result);
-			});
-		});
+		let {response, body} = await customRequest(method, requestURL, options);
 		
+		if (!response.headers['content-type']) {
+			throw new this.UnsupportedFormatError(requestURL, 'Missing Content-Type header');
+		}
+		
+		// Array of success codes given
+		if (options.successCodes) {
+			var success = options.successCodes.includes(response.statusCode);
+		}
+		// Explicit FALSE means allow any status code
+		else if (options.successCodes === false) {
+			var success = true;
+		}
+		// Otherwise, 2xx is success
+		else {
+			var success = response.statusCode >= 200 && response.statusCode < 300;
+		}
+		if (!success) {
+			throw new Zotero.HTTP.StatusError(requestURL, response.statusCode, response.body);
+		}
+
+		if (options.debug) {
+			Zotero.debug(`HTTP ${response.statusCode} response: ${body}`);
+		}
+		
+		var result = {
+			responseURL: response.request.uri.href,
+			headers: response.headers,
+			status: response.statusCode
+		};
+		
+		if (options.responseType == 'document') {
+			let dom;
+			try {
+				dom = new JSDOM(body, {
+					url: result.responseURL,
+					// Inform JSDOM what content type it's parsing,
+					// so it could reject unsupported content types
+					contentType: response.headers['content-type']
+				});
+			}
+			catch (e) {
+				if (e.message.includes('not a HTML or XML content type')) {
+					Zotero.debug(e, 1)
+					throw new this.UnsupportedFormatError(result.responseURL, e.message);
+				}
+				throw e;
+			}
+			wgxpath.install(dom.window, true);
+			result.response = dom.window.document;
+			
+			// Follow meta redirects
+			if (response.headers['content-type']
+					&& response.headers['content-type'].startsWith('text/html')) {
+				let meta = result.response.querySelector('meta[http-equiv=refresh]');
+				if (meta && meta.getAttribute('content')) {
+					let parts = meta.getAttribute('content').split(/;\s*url=/);
+					// If there's a redirect to another URL in less than 15 seconds,
+					// follow it
+					if (parts.length == 2 && parseInt(parts[0]) <= 15) {
+						let newURL = parts[1].trim().replace(/^'(.+)'/, '$1');
+						newURL = url.resolve(requestURL, newURL);
+						
+						Zotero.debug("Meta refresh to " + newURL);
+						result = Zotero.HTTP.request(method, newURL, options);
+					}
+				}
+			}
+		}
+		else if (options.responseType == 'json') {
+			result.response = JSON.parse(body.toString());
+		}
+		else if (!options.responseType || options.responseType == 'text') {
+			body = body.toString();
+			result.response = body;
+			result.responseText = body;
+		}
+		else {
+			throw new Error("Invalid responseType");
+		}
+		
+		return result;
 	};
-	 
+	
 	/**
 	 * Load one or more documents
 	 *
@@ -329,5 +310,76 @@ Zotero.HTTP = new function() {
 		return true;
 	};
 }
+
+/**
+ * request.js doesn't support response size limitation, therefore
+ * we have to do it manually
+ *
+ * @param {String} method
+ * @param {String} requestURL
+ * @param {Object} options
+ * @return {Promise<Object>} response, body
+ */
+function customRequest(method, requestURL, options) {
+	return new Promise(function (resolve, reject) {
+		let response;
+		
+		// Make sure resolve/reject is called only once even if request.js
+		// is emitting events when it shouldn't
+		let returned = false;
+		
+		// Store buffers in array, because concatenation operation is is unbelievably slow
+		let buffers = [];
+		let bufferLength = 0;
+		
+		let req = request({
+			uri: requestURL,
+			method,
+			headers: options.headers,
+			timeout: options.timeout,
+			body: options.body,
+			followAllRedirects: true,
+			jar: options.cookieSandbox,
+			encoding: null // Get body in a buffer
+		})
+			.on('error', function (err) {
+				if (returned) return;
+				reject(err);
+			})
+			.on('data', function (chunk) {
+				if (returned) return;
+				
+				bufferLength += chunk.length;
+				buffers.push(chunk);
+				
+				if (bufferLength > options.maxResponseSize) {
+					req.abort();
+					returned = true;
+					reject(new Zotero.HTTP.ResponseSizeError(requestURL));
+				}
+			})
+			.on('response', function (res) {
+				if (returned) return;
+				response = res;
+				// Content-length doesn't always exists or it can be a length of a gzipped content,
+				// but it's still worth to do the initial size check
+				if (
+					response.headers['content-length'] !== undefined &&
+					response.headers['content-length'] > options.maxResponseSize
+				) {
+					req.abort();
+					returned = true;
+					reject(new Zotero.HTTP.ResponseSizeError(requestURL));
+				}
+				
+				// TODO: Filter content-type too
+			})
+			.on('end', function () {
+				if (returned) return;
+				returned = true;
+				resolve({response, body: Buffer.concat(buffers, bufferLength)});
+			});
+	});
+};
 
 module.exports = Zotero.HTTP;

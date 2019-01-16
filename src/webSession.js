@@ -183,6 +183,14 @@ WebSession.prototype.handleURL = async function () {
 				return;
 			}
 			
+			if (e instanceof Zotero.HTTP.ResponseSizeError) {
+				this.ctx.throw(400, "Response exceeds max size");
+			}
+			
+			if (e instanceof Zotero.HTTP.UnsupportedFormatError) {
+				this.ctx.throw(400, "The remote document is not in a supported format");
+			}
+			
 			// No more URLs to try
 			if (i == urlsToTry.length - 1) {
 				this.ctx.throw(500, "An error occurred retrieving the document");
