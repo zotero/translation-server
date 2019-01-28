@@ -1,0 +1,6 @@
+{
+	"translators": {
+		"CrossrefREST.email": "services@lists.wikimedia.org" // Pass an email to Crossref REST API to utilize the faster servers pool
+	},
+	"userAgent": "ZoteroTranslationServer/WMF (mailto:services@lists.wikimedia.org)"
+}
