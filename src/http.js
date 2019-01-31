@@ -124,26 +124,6 @@ Zotero.HTTP = new function() {
 		
 		let {response, body} = await customRequest(method, requestURL, options);
 		
-		if (!response.headers['content-type']) {
-			throw new this.UnsupportedFormatError(requestURL, 'Missing Content-Type header');
-		}
-		
-		// Array of success codes given
-		if (options.successCodes) {
-			var success = options.successCodes.includes(response.statusCode);
-		}
-		// Explicit FALSE means allow any status code
-		else if (options.successCodes === false) {
-			var success = true;
-		}
-		// Otherwise, 2xx is success
-		else {
-			var success = response.statusCode >= 200 && response.statusCode < 300;
-		}
-		if (!success) {
-			throw new Zotero.HTTP.StatusError(requestURL, response.statusCode, response.body);
-		}
-
 		if (options.debug) {
 			Zotero.debug(`HTTP ${response.statusCode} response: ${body}`);
 		}
@@ -395,6 +375,29 @@ function customRequest(method, requestURL, options) {
 			.on('response', function (res) {
 				if (returned) return;
 				response = res;
+				
+				// Check if the content-type header exists
+				if (!response.headers['content-type']) {
+					returned = true;
+					return reject(new Zotero.HTTP.UnsupportedFormatError(requestURL, 'Missing Content-Type header'));
+				}
+				
+				// Check if the status code is allowed
+				// Array of success codes given
+				if (options.successCodes) {
+					var success = options.successCodes.includes(response.statusCode);
+				}
+				// Explicit FALSE means allow any status code
+				else if (options.successCodes === false) {
+					var success = true;
+				}
+				// Otherwise, 2xx is success
+				else {
+					var success = response.statusCode >= 200 && response.statusCode < 300;
+				}
+				if (!success) {
+					return reject(new Zotero.HTTP.StatusError(requestURL, response.statusCode, response.body));
+				}
 				
 				// Check content-type before starting the download
 				let mimeType = new MIMEType(response.headers['content-type']);
