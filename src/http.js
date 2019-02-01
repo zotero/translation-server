@@ -91,7 +91,7 @@ Zotero.HTTP = new function() {
 			maxResponseSize: 50 * 1024 * 1024
 		}, options);
 		
-		if (config.get('persistentCookies') == true) {
+		if (config.get('persistentCookies')) {
 			options.cookieSandbox = true;
 		}
 
