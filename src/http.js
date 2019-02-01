@@ -29,6 +29,7 @@ var url = require('url');
 var jsdom = require('jsdom');
 var { JSDOM } = jsdom;
 var wgxpath = require('wicked-good-xpath');
+var MIMEType = require("whatwg-mimetype"); // Use the same MIME type library as JSDOM does
 
 /**
  * Functions for performing HTTP requests
@@ -123,26 +124,6 @@ Zotero.HTTP = new function() {
 		
 		let {response, body} = await customRequest(method, requestURL, options);
 		
-		if (!response.headers['content-type']) {
-			throw new this.UnsupportedFormatError(requestURL, 'Missing Content-Type header');
-		}
-		
-		// Array of success codes given
-		if (options.successCodes) {
-			var success = options.successCodes.includes(response.statusCode);
-		}
-		// Explicit FALSE means allow any status code
-		else if (options.successCodes === false) {
-			var success = true;
-		}
-		// Otherwise, 2xx is success
-		else {
-			var success = response.statusCode >= 200 && response.statusCode < 300;
-		}
-		if (!success) {
-			throw new Zotero.HTTP.StatusError(requestURL, response.statusCode, response.body);
-		}
-
 		if (options.debug) {
 			Zotero.debug(`HTTP ${response.statusCode} response: ${body}`);
 		}
@@ -154,29 +135,22 @@ Zotero.HTTP = new function() {
 		};
 		
 		if (options.responseType == 'document') {
-			let dom;
-			try {
+			let mimeType = new MIMEType(response.headers['content-type']);
+			
+			// Filter content-type in the same way as JSDOM does
+			if (mimeType.isHTML() || mimeType.isXML()) {
+				result.type = 'document';
 				body = decodeContent(body, response.headers['content-type']);
-				dom = new JSDOM(body, {
+				let dom = new JSDOM(body, {
 					url: result.responseURL,
-					// Inform JSDOM what content type it's parsing,
-					// so it could reject unsupported content types
+					// Inform JSDOM what content type it's parsing
 					contentType: response.headers['content-type']
 				});
-			}
-			catch (e) {
-				if (e.message.includes('not a HTML or XML content type')) {
-					Zotero.debug(e, 1)
-					throw new this.UnsupportedFormatError(result.responseURL, e.message);
-				}
-				throw e;
-			}
-			wgxpath.install(dom.window, true);
-			result.response = dom.window.document;
-			
-			// Follow meta redirects
-			if (response.headers['content-type']
-					&& response.headers['content-type'].startsWith('text/html')) {
+				
+				wgxpath.install(dom.window, true);
+				result.response = dom.window.document;
+				
+				// Follow meta redirects in HTML and XML files
 				let meta = result.response.querySelector('meta[http-equiv=refresh]');
 				if (meta && meta.getAttribute('content')) {
 					let parts = meta.getAttribute('content').split(/;\s*url=/);
@@ -190,6 +164,19 @@ Zotero.HTTP = new function() {
 						result = Zotero.HTTP.request(method, newURL, options);
 					}
 				}
+			}
+			else if (
+				options.fallbackToPDF &&
+				mimeType.essence === 'application/pdf'
+			) {
+				result.type = 'pdf';
+				result.response = body;
+			}
+			else {
+				throw new this.UnsupportedFormatError(
+					result.responseURL,
+					response.headers['content-type'] + ' is not supported'
+				);
 			}
 		}
 		else if (options.responseType == 'json') {
@@ -319,7 +306,6 @@ Zotero.HTTP = new function() {
  *
  * TODO: Remove this code when https://github.com/jsdom/jsdom/issues/2495 will be solved
  */
-const MIMEType = require("whatwg-mimetype");
 const sniffHTMLEncoding = require("html-encoding-sniffer");
 const whatwgEncoding = require("whatwg-encoding");
 
@@ -389,6 +375,46 @@ function customRequest(method, requestURL, options) {
 			.on('response', function (res) {
 				if (returned) return;
 				response = res;
+				
+				// Check if the content-type header exists
+				if (!response.headers['content-type']) {
+					returned = true;
+					return reject(new Zotero.HTTP.UnsupportedFormatError(requestURL, 'Missing Content-Type header'));
+				}
+				
+				// Check if the status code is allowed
+				// Array of success codes given
+				if (options.successCodes) {
+					var success = options.successCodes.includes(response.statusCode);
+				}
+				// Explicit FALSE means allow any status code
+				else if (options.successCodes === false) {
+					var success = true;
+				}
+				// Otherwise, 2xx is success
+				else {
+					var success = response.statusCode >= 200 && response.statusCode < 300;
+				}
+				if (!success) {
+					returned = true;
+					return reject(new Zotero.HTTP.StatusError(requestURL, response.statusCode));
+				}
+				
+				// Check content-type before starting the download
+				let mimeType = new MIMEType(response.headers['content-type']);
+				if (!(
+					mimeType.isHTML() ||
+					mimeType.isXML() ||
+					options.fallbackToPDF && mimeType.essence === 'application/pdf'
+				)) {
+					req.abort();
+					returned = true;
+					return reject(new Zotero.HTTP.UnsupportedFormatError(
+						requestURL,
+						response.headers['content-type'] + ' is not supported'
+					));
+				}
+				
 				// Content-length doesn't always exists or it can be a length of a gzipped content,
 				// but it's still worth to do the initial size check
 				if (
@@ -399,8 +425,6 @@ function customRequest(method, requestURL, options) {
 					returned = true;
 					reject(new Zotero.HTTP.ResponseSizeError(requestURL));
 				}
-				
-				// TODO: Filter content-type too
 			})
 			.on('end', function () {
 				if (returned) return;
@@ -408,6 +432,6 @@ function customRequest(method, requestURL, options) {
 				resolve({response, body: Buffer.concat(buffers, bufferLength)});
 			});
 	});
-};
+}
 
 module.exports = Zotero.HTTP;

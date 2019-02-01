@@ -14,10 +14,24 @@ Resources:
       MemorySize: 2048
       Timeout: 30
       Policies:
+        - Statement:
+           Action:
+            - s3:PutObject
+            - s3:DeleteObject
+           Effect: Allow
+           Resource: !ImportValue RecognizerUploadBucketArn
         - LambdaInvokePolicy:
            FunctionName: {{ identifier_search_function_name }}
+        - LambdaInvokePolicy:
+           FunctionName: {{ recognizer_function_name }}
       Events:
         # API Gateway
+        GetAPI:
+          Type: Api
+          Properties:
+            # Proxy all GET requests to Lambda function
+            Path: /{proxy+}
+            Method: get
         PostAPI:
           Type: Api
           Properties:
