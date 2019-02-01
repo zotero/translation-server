@@ -396,7 +396,8 @@ function customRequest(method, requestURL, options) {
 					var success = response.statusCode >= 200 && response.statusCode < 300;
 				}
 				if (!success) {
-					return reject(new Zotero.HTTP.StatusError(requestURL, response.statusCode, response.body));
+					returned = true;
+					return reject(new Zotero.HTTP.StatusError(requestURL, response.statusCode));
 				}
 				
 				// Check content-type before starting the download
