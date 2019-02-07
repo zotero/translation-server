@@ -160,6 +160,7 @@ Zotero.HTTP = new function() {
 		if (options.responseType == 'document') {
 			let dom;
 			try {
+				body = decodeContent(body, response.headers['content-type']);
 				dom = new JSDOM(body, {
 					url: result.responseURL,
 					// Inform JSDOM what content type it's parsing,
@@ -313,6 +314,32 @@ Zotero.HTTP = new function() {
 		});
 		return true;
 	};
+}
+
+/**
+ * A temporary workaround for JSDOM content decoding issues.
+ * The code is adapted from jsdom/lib/api.js. All dependencies
+ * are already used internally in JSDOM
+ *
+ * TODO: Remove this code when https://github.com/jsdom/jsdom/issues/2495 will be solved
+ */
+const MIMEType = require("whatwg-mimetype");
+const sniffHTMLEncoding = require("html-encoding-sniffer");
+const whatwgEncoding = require("whatwg-encoding");
+
+function decodeContent(html, contentType) {
+	let transportLayerEncodingLabel;
+	if (contentType) {
+		const mimeType = new MIMEType(contentType);
+		transportLayerEncodingLabel = mimeType.parameters.get("charset");
+	}
+	
+	html = Buffer.from(html.buffer, html.byteOffset, html.byteLength);
+	
+	let encoding = sniffHTMLEncoding(html, {defaultEncoding: "UTF-8", transportLayerEncodingLabel});
+	html = whatwgEncoding.decode(html, encoding);
+	
+	return html;
 }
 
 /**
