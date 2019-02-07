@@ -43,7 +43,6 @@ let options = yargs
 	.option('output', {
 		type: 'string',
 		alias: 'o',
-		demandOption: true,
 		describe: 'Path to the output file for translation results'
 	})
 	.option('cross-origin', {
@@ -58,7 +57,7 @@ let options = yargs
 	.option('grep', {
 		type: 'string',
 		alias: 'g',
-		describe: 'Only test translators with matching labels'
+		describe: 'Only test translators with matching labels or ids'
 	})
 	.option('browser', {
 		type: 'string',
@@ -151,7 +150,7 @@ for (let type of TEST_TYPES) {
 		// Concurrent async via iterators magic
 		// https://stackoverflow.com/a/51020535
 		if (regexp) {
-			translators = translators.filter(t => regexp.test(t.label));
+			translators = translators.filter(t => regexp.test(t.label) || regexp.test(t.translatorID));
 		}
 		let iterator = translators.values();
 		let promises = new Array(options.numConcurrentTests).fill(iterator).map(t => runTesters(t, type));
@@ -174,6 +173,13 @@ let result = {
 	version: Zotero.version,
 	results: results
 };
-await fs.writeFile(options.o, JSON.stringify(result, null, '\t'));
-process.exit(0);
+if (options.o) {
+	await fs.writeFile(options.o, JSON.stringify(result, null, '\t'));
+}
+// If any tests failed, return non-0 exit code
+let retVal = 0;
+if (results.some(r => r.failed.length || r.unknown.length)) {
+	retVal = 1;
+}
+process.exit(retVal);
 })();

@@ -1,0 +1,8 @@
+# Skip files that aren't required i.e. ".git"
+cp -R config package/
+cp -R modules package/
+cp -R node_modules package/
+cp -R src package/
+
+# Remove broken symlinks because "sam package" complains
+find -L package/ -maxdepth 10 -type l -delete
