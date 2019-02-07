@@ -8,5 +8,6 @@
 		"CrossrefREST.email": "" // Pass an email to Crossref REST API to utilize the faster servers pool
 	},
 	"userAgent": "ub_tools/zotero (see https://ixtheo.de/crawler)",
-	"translatorsDirectory": "./modules/translators"
+	"translatorsDirectory": "./modules/translators",
+	"persistentCookies": true // Remember upstream cookies between translation operations. Do not enable for a public service.
 }
