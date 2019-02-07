@@ -9,5 +9,5 @@
 	},
 	"userAgent": "ub_tools/zotero (see https://ixtheo.de/crawler)",
 	"translatorsDirectory": "./modules/translators",
-	"persistentCookies": false // Remember upstream cookies between translation operations. Do not enable for a public service.
+	"persistentCookies": true // Remember upstream cookies between translation operations. Do not enable for a public service.
 }
