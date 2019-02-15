@@ -1,2 +1,6 @@
 node_modules
+config/production.json
+config/dev.json
+config/local.json
+lambda_config*.env
 

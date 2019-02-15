@@ -2,7 +2,7 @@
 	"allowedOrigins": [], // CORS
 	"blacklistedDomains": [],
 	"deproxifyURLs": false, // Automatically try deproxified versions of URLs
-	"identifierSearchURL": "", // Identifier search endpoint for text search
+	"identifierSearchLambda": "", // Identifier search Lambda function for text search
 	"port": 1969,
 	"translators": {
 		"CrossrefREST.email": "" // Pass an email to Crossref REST API to utilize the faster servers pool

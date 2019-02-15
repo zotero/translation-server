@@ -23,34 +23,38 @@
     ***** END LICENSE BLOCK *****
 */
 
-const process = require('process');
-const config = require('config');
 const Koa = require('koa');
 const _ = require('koa-route');
 const bodyParser = require('koa-bodyparser');
 const cors = require('./cors');
+const serverless = require('serverless-http');
 
 require('./zotero');
 const Debug = require('./debug');
-const Translators = require('./translators');
+var Translators; // Translators module is cashed
 const SearchEndpoint = require('./searchEndpoint');
 const WebEndpoint = require('./webEndpoint');
 const ExportEndpoint = require('./exportEndpoint');
 
 const app = module.exports = new Koa();
 app.use(cors);
-app.use(bodyParser({ enableTypes: ['text', 'json']}));
+app.use(bodyParser({enableTypes: ['text', 'json']}));
 app.use(_.post('/web', WebEndpoint.handle.bind(WebEndpoint)));
 app.use(_.post('/search', SearchEndpoint.handle.bind(SearchEndpoint)));
 app.use(_.post('/export', ExportEndpoint.handle.bind(ExportEndpoint)));
 
 Debug.init(1);
-Translators.init()
-.then(function () {
-	// Don't start server in test mode, since it's handled by supertest
-	if (process.env.NODE_ENV == 'test') return;
+
+module.exports.handler = async function (event, context) {
+	if (!Translators) {
+		Translators = require('./translators');
+		await Translators.init();
+	}
 	
-	var port = config.get('port');
-	app.listen(port);
-	Debug.log(`Listening on 0.0.0.0:${port}`);
-});
+	return await new Promise(function (resolve, reject) {
+		serverless(app)(event, context, function (err, res) {
+			if (err) return reject(err);
+			resolve(res);
+		});
+	})
+};

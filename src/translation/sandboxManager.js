@@ -54,6 +54,9 @@ SandboxManager.prototype = {
 
 		// Import inner functions back into the sandbox
 		for (var i in functions) {
+			// TODO: Omit in translate.js?
+			if (functions[i] == 'detectExport') continue;
+			
 			try {
 				code += 'this.sandbox.' + functions[i] + ' = ' + functions[i] + ';';
 			} catch (e) {

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+format="$1"
+if [ -z "$1" ]; then
+	echo "Usage: $0 format"
+	exit 1
+fi
+
+json='[{"key":"Q5VYZIG2","version":0,"itemType":"newspaperArticle","creators":[{"firstName":"Keith","lastName":"Collins","creatorType":"author"}],"tags":[{"tag":"Net Neutrality","type":1},{"tag":"Pai, Ajit","type":1},{"tag":"Federal Communications Commission","type":1},{"tag":"Regulation and Deregulation of Industry","type":1},{"tag":"Computers and the Internet","type":1}],"title":"Net Neutrality Has Officially Been Repealed. Here’s How That Could Affect You.","section":"Technology","url":"https://www.nytimes.com/2018/06/11/technology/net-neutrality-repeal.html","abstractNote":"Net Neutrality rules that required internet service providers to offer equal access to all web content are no longer in effect as of Monday.","language":"en-US","libraryCatalog":"NYTimes.com","accessDate":"2018-08-21T08:23:37Z","date":"2018-06-11","publicationTitle":"The New York Times","ISSN":"0362-4331"}]'
+curl -v -d "$json" -H "Content-Type: application/json" "127.0.0.1:1969/export?format=$format"

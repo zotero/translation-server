@@ -4,12 +4,12 @@ var TestEndpoint = module.exports = {
 	},
 	
 	handleSingle: async function (ctx, next) {
+		var title = ctx.headers['accept-language'] == 'fr' ? 'Titre' : 'Title';
 		ctx.response.body = `<html>
 			<head>
-				<title>Page Title</title>
+				<title>${title}</title>
 				<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
-				<meta name="DC.Type" content="Text.Serial.Journal"/>
-				<meta name="citation_title" content="Title"/>
+				<meta name="citation_title" content="${title}"/>
 			</head>
 			<body>Body</body>
 		</html>`;
@@ -21,5 +21,18 @@ var TestEndpoint = module.exports = {
 			+ '<span class="Z3988" title="url_ver=Z39.88-2004&amp;ctx_ver=Z39.88-2004&amp;rfr_id=info%3Asid%2Fzotero.org%3A2&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&amp;rft.genre=book&amp;rft.btitle=B"></span>'
 			+ '<span class="Z3988" title="url_ver=Z39.88-2004&amp;ctx_ver=Z39.88-2004&amp;rfr_id=info%3Asid%2Fzotero.org%3A2&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&amp;rft.genre=book&amp;rft.btitle=C"></span>'
 			+ '</body></html>';
+	},
+	
+	handleRedirect: async function (ctx, next) {
+		ctx.redirect('/test/single');
+	},
+	
+	invalidContentType: async function (ctx, next) {
+		ctx.set('Content-Type', 'image/jpeg');
+		ctx.response.body = '';
+	},
+	
+	missingContentType: async function (ctx, next) {
+		ctx.response.body = null;
 	}
 };

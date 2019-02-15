@@ -26,28 +26,41 @@
 const config = require('config');
 const urlLib = require('url');
 const Translate = require('./translation/translate');
+const TLDS = Zotero.require('./translation/tlds');
 const HTTP = require('./http');
 const Translators = require('./translators');
 const SearchEndpoint = require('./searchEndpoint');
+const { jar: cookieJar } = require('request');
 
 const SERVER_TRANSLATION_TIMEOUT = 30;
+const FORWARDED_HEADERS = ['Accept-Language'];
 
-var SearchSession = module.exports = function (ctx, next, data) {
+var WebSession = module.exports = function (ctx, next, data, options) {
 	this.ctx = ctx;
 	this.next = next;
 	this.data = data;
+	this.options = options;
 };
 
 /**
  * @return {Promise<undefined>}
  */
-SearchSession.prototype.handleURL = async function () {
+WebSession.prototype.handleURL = async function () {
 	if (typeof this.data == 'object') {
 		await this.selectDone();
 		return;
 	}
 	
 	var url = this.data;
+	
+	// Forward supported headers
+	var headers = {};
+	for (let header of FORWARDED_HEADERS) {
+		let lc = header.toLowerCase();
+		if (this.ctx.headers[lc]) {
+			headers[header] = this.ctx.headers[lc];
+		}
+	}
 	
 	try {
 		var parsedURL = urlLib.parse(url);
@@ -72,13 +85,6 @@ SearchSession.prototype.handleURL = async function () {
 		}
 	}
 	
-	// If a doi.org URL, use search handler
-	if (url.match(/^https?:\/\/[^\/]*doi\.org\//)) {
-		let doi = Zotero.Utilities.cleanDOI(url);
-		await SearchEndpoint.handleIdentifier(this.ctx, { DOI: doi });
-		return;
-	}
-	
 	var urlsToTry = config.get('deproxifyURLs') ? this.deproxifyURL(url) : [url];
 	for (let i = 0; i < urlsToTry.length; i++) {
 		let url = urlsToTry[i];
@@ -98,9 +104,7 @@ SearchSession.prototype.handleURL = async function () {
 		}*/
 		
 		// New request
-		/*this._cookieSandbox = new Zotero.CookieSandbox(null, url);
-		this._cookieSandbox.setTimeout(SERVER_TRANSLATION_TIMEOUT*1000,
-			this.timeout.bind(this));*/
+		this._cookieSandbox = cookieJar();
 		
 		let resolve;
 		let reject;
@@ -112,6 +116,11 @@ SearchSession.prototype.handleURL = async function () {
 		let translate = new Translate.Web();
 		let translatePromise;
 		translate.setHandler("translators", async function (translate, translators) {
+			// Force single-page saving
+			if (this.options.single) {
+				translators = translators.filter(t => t.itemType != 'multiple');
+			}
+			
 			try {
 				translatePromise = this.translate(translate, translators);
 				await translatePromise;
@@ -140,7 +149,8 @@ SearchSession.prototype.handleURL = async function () {
 			}
 			resolve();
 		});
-		//translate.setCookieSandbox(this._cookieSandbox);
+		translate.setCookieSandbox(this._cookieSandbox);
+		translate.setRequestHeaders(headers);
 		
 		try {
 			await HTTP.processDocuments(
@@ -150,8 +160,11 @@ SearchSession.prototype.handleURL = async function () {
 					// This could be optimized by only running detect on secondary translators
 					// if the first fails, but for now just run detect on all
 					return translate.getTranslators(true);
-				}/*,
-				this._cookieSandbox*/
+				},
+				{
+					cookieSandbox: this._cookieSandbox,
+					headers
+				}
 			);
 			return promise;
 		}
@@ -166,7 +179,16 @@ SearchSession.prototype.handleURL = async function () {
 			let doi = Zotero.Utilities.cleanDOI(decodeURIComponent(url).match(/[^\?]+/)[0]);
 			if (doi) {
 				Zotero.debug("Found DOI in URL -- continuing with " + doi);
-				return this.handleDOI(doi);
+				await SearchEndpoint.handleIdentifier(this.ctx, { DOI: doi });
+				return;
+			}
+			
+			if (e instanceof Zotero.HTTP.ResponseSizeError) {
+				this.ctx.throw(400, "Response exceeds max size");
+			}
+			
+			if (e instanceof Zotero.HTTP.UnsupportedFormatError) {
+				this.ctx.throw(400, "The remote document is not in a supported format");
 			}
 			
 			// No more URLs to try
@@ -183,7 +205,7 @@ SearchSession.prototype.handleURL = async function () {
  *
  * @return {Promise<undefined>}
  */
-SearchSession.prototype.translate = async function (translate, translators) {
+WebSession.prototype.translate = async function (translate, translators) {
 	// No matching translators
 	if (!translators.length) {
 		Zotero.debug("No translators found -- saving as a webpage");
@@ -207,7 +229,7 @@ SearchSession.prototype.translate = async function (translate, translators) {
 			
 			// If no more translators, save as webpage
 			if (!translators.length) {
-				this.saveWebpage(this.ctx, translate);
+				this.saveWebpage(translate);
 				return;
 			}
 			
@@ -229,7 +251,7 @@ SearchSession.prototype.translate = async function (translate, translators) {
  *
  * @return {undefined}
  */
-SearchSession.prototype.saveWebpage = function (translate) {
+WebSession.prototype.saveWebpage = function (translate) {
 	let head = translate.document.documentElement.querySelector('head');
 	if (!head) {
 		// XXX better status code?
@@ -255,7 +277,7 @@ SearchSession.prototype.saveWebpage = function (translate) {
 /**
  * Called if multiple items are available for selection from the translator
  */
-SearchSession.prototype.select = function (url, translate, items, callback, promise) {
+WebSession.prototype.select = function (url, translate, items, callback, promise) {
 	// Fix for translators that return item list as array rather than object
 	if (Array.isArray(items)) {
 		let newItems = {};
@@ -286,7 +308,7 @@ SearchSession.prototype.select = function (url, translate, items, callback, prom
 /**
  * Called when items have been selected by the client
  */
-SearchSession.prototype.selectDone = function () {
+WebSession.prototype.selectDone = function () {
 	var url = this.data.url;
 	var selectedItems = this.data.items;
 	
@@ -329,7 +351,7 @@ SearchSession.prototype.selectDone = function () {
 /**
  * Called if the request timed out before it could complete
  */
-/*SearchSession.prototype.timeout = function() {
+/*WebSession.prototype.timeout = function() {
 	this.sendResponse(504, "text/plain", "Translation timed out.\n");
 };*/
 
@@ -352,7 +374,7 @@ SearchSession.prototype.selectDone = function () {
  *
  * Based on Zotero.Proxies.getPotentialProxies()
  */
-SearchSession.prototype.deproxifyURL = function (url) {
+WebSession.prototype.deproxifyURL = function (url) {
 	var urlToProxy = {
 		[url]: null
 	};
