@@ -124,6 +124,18 @@ describe("/export", function () {
 		assert.equal(doc.querySelector('bibo\\:Webpage dcterms\\:title').textContent, 'Example');
 	});
 	
+	it("should export to TEI", async function () {
+		var response = await request()
+			.post('/export?format=tei')
+			.send(json)
+			.expect(200)
+			.expect('Content-Type', 'text/xml');
+		var dp = new DOMParser();
+		var doc = dp.parseFromString(response.text, 'text/xml');
+		assert.equal(doc.documentElement.localName, 'listBibl');
+		assert.equal(doc.querySelector('monogr title').textContent, 'The New York Times');
+	});
+	
 	it("should export Zotero RDF (full)", async function () {
 		var response = await request()
 			.post('/export?format=rdf_zotero')
