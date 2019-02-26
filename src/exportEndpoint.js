@@ -88,6 +88,15 @@ var ExportEndpoint = module.exports = {
 			ctx.throw(400, "Input must be an array of items as JSON");
 		}
 		
+		// Emulate itemsToExportFormat as best as we can
+		for (let item of items) {
+			// There's no library, so all we have is a key
+			if (!item.uri) {
+				item.uri = item.key;
+				delete item.key;
+			}
+		}
+		
 		var translate = new Translate.Export();
 		translate.setTranslator(translatorID);
 		translate.setItems(items);
