@@ -23,7 +23,7 @@ function addTest(name, input, expected) {
 	});
 }
 
-describe("/import", function () {
+describe.skip("/import", function () {
 	const translators = path.join(__dirname, '../modules/translators');
 	for (const translator of fs.readdirSync(translators)) {
 		if (!translator.endsWith('.js')) continue;
