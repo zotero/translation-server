@@ -30,7 +30,7 @@ Zotero.Translate = {...Zotero.Translate,
 	...require('./translate_item')
 };
 Zotero.Translate.ItemSaver.prototype.saveItems = async function (jsonItems, attachmentCallback, itemsDoneCallback) {
-	this.items = jsonItems;
+	this.items = (this.items || []).concat(jsonItems)
 	return jsonItems
 }
 

@@ -1,25 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-function normalizeTags(item) {
-	if (item.tags) item.tags = item.tags.map(tag => (typeof tag === 'string') ? { tag } : tag);
-	if (item.tags && item.tags.length === 0) delete item.tags;
-	if (item.tags) item.tags.sort((a, b) => a.tag.localeCompare(b.tag));
-}
-
-function normalizeItem(item) {
-	delete item.id;
-
-	normalizeTags(item);
-
-	for (const note of (item.notes || [])) {
-		normalizeTags(note);
-	}
-}
+const endpoint = require('../src/importEndpoint');
 
 function addTest(name, input, expected) {
 	for (const item of expected) {
-		normalizeItem(item);
+		endpoint.normalizeItem(item);
 	}
 
 	it(`should import ${name}`, async function () {
@@ -30,10 +16,10 @@ function addTest(name, input, expected) {
 			.expect(200);
 
 		for (const item of response.body) {
-			normalizeItem(item);
+			endpoint.normalizeItem(item);
 		}
 
-		assert.deepEqual(expected, response.body);
+		assert.deepEqual(response.body, expected);
 	});
 }
 
