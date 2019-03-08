@@ -56,7 +56,7 @@ describe("/import", function () {
 					const pos = parseInt(m[2]);
 					const line = code.substring(0, start + pos).split('\n').length;
 					const column = pos - cases.lastIndexOf('\n', pos);
-					throw new Error(`${m[1]} at line ${line}, column ${column}`);
+					throw new Error(`${m[1]} around line ${line}, column ${column}`);
 				}
 				throw err;
 			});
