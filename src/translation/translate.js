@@ -29,6 +29,16 @@ Zotero.Translate = {...Zotero.Translate,
 	SandboxManager: require('./sandboxManager'),
 	...require('./translate_item')
 };
+Zotero.Translate.ItemSaver = class {
+	constructor(options) {
+		// ignore
+	}
+
+	async saveItems(jsonItems, attachmentCallback, itemsDoneCallback) {
+		this.items = jsonItems;
+		return jsonItems
+	}
+}
 
 // Translation architecture shims and monkey-patches
 var wgxpath = require('wicked-good-xpath');
