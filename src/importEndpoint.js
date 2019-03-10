@@ -37,7 +37,7 @@ class ImportEndpoint {
 		const translate = new Translate.Import();
 		translate.setString(ctx.request.body || '');
 
-		const translators = ctx.request.query.translatorID ? [ ctx.request.query.translatorID ] : (await translate.getTranslators());
+		const translators = await translate.getTranslators();
 		if (translators.length === 0) {
 			ctx.throw(500, 'No suitable translators found', { expose: true });
 			return;
