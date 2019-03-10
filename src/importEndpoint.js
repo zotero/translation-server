@@ -43,31 +43,17 @@ class ImportEndpoint {
 			return;
 		}
 		translate.setTranslator(translators[0]);
-		await translate.translate({ libraryID: 1 });
-
+		var items = await translate.translate({ libraryID: 1 });
+		
 		ctx.set('Content-Type', 'application/json');
-		for (const item of translate._itemSaver.items) {
-			this.normalizeItem(item);
-		}
-
-		ctx.response.body = JSON.stringify(translate._itemSaver.items, null, 2);
-	}
-
-	normalizeItem(item) {
-		delete item.id;
-		delete item.itemID;
-
-		this.normalizeTags(item);
-
-		for (const note of (item.notes || [])) {
-			this.normalizeTags(note);
-		}
-	}
-
-	normalizeTags(item) {
-		if (item.tags) item.tags = item.tags.map(tag => (typeof tag === 'string') ? { tag } : tag);
-		if (item.tags && item.tags.length === 0) delete item.tags;
-		if (item.tags) item.tags.sort((a, b) => tagValue(a).localeCompare(tagValue(b)));
+		
+		// Convert translator JSON to API JSON
+		var newItems = [];
+		items.forEach(item => {
+			newItems.push(...Zotero.Utilities.itemToAPIJSON(item));
+		});
+		
+		ctx.response.body = JSON.stringify(newItems, null, 2);
 	}
 }
 
