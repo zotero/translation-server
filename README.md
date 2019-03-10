@@ -53,8 +53,6 @@ It’s also possible to opt out of proxying for specific hosts by using the `NO_
 
 ## Endpoints
 
-All translator types are currently supported with their correspoinding endpoints `/web`, `/search`, `/export`, and `/import`.
-
 ### Web Translation
 
 #### Retrieve metadata for a webpage:
@@ -117,9 +115,3 @@ to the Zotero API JSON format:
 
 ```
 $ curl -d @data.bib -H 'Content-Type: text/plain' http://127.0.0.1:1969/import
-```
-Instead of letting Zotero decide on a suitable translator for this format you can also indicate the translatorID explicitely:
-```
-$ curl -d @data.bib -H 'Content-Type: text/plain' \
-   http://127.0.0.1:1969/import?translatorID=9cb70025-a888-4a29-a210-93ec52da40d4
-```
