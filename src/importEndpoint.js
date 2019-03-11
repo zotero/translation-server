@@ -1,3 +1,5 @@
+'use strict';
+
 /*
 		***** BEGIN LICENSE BLOCK *****
 		
@@ -23,17 +25,10 @@
 		***** END LICENSE BLOCK *****
 */
 
-const config = require('config');
 const Translate = require('./translation/translate');
 
-function tagValue(tag) {
-	if (typeof tag.tag === 'string') return tag.tag;
-	if (typeof tag.tag.value === 'string') return tag.tag.value;
-	throw new Error(`Unexpected tag format ${JSON.stringify(tag)}`);
-}
-
-class ImportEndpoint {
-	async handle(ctx, _next) {
+module.exports = {
+	handle: async function (ctx, _next) {
 		const translate = new Translate.Import();
 		translate.setString(ctx.request.body || '');
 
@@ -46,15 +41,14 @@ class ImportEndpoint {
 		var items = await translate.translate({ libraryID: 1 });
 		
 		ctx.set('Content-Type', 'application/json');
+		ctx.set('Zotero-Translator-ID', translators[0].translatorID);
 		
 		// Convert translator JSON to API JSON
 		var newItems = [];
-		items.forEach(item => {
+		items.forEach((item) => {
 			newItems.push(...Zotero.Utilities.itemToAPIJSON(item));
 		});
 		
 		ctx.response.body = JSON.stringify(newItems, null, 2);
 	}
-}
-
-module.exports = new ImportEndpoint;
+};
