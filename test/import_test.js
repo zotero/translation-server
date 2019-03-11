@@ -1,9 +1,11 @@
+'use strict';
+
 const fs = require('fs');
 const path = require('path');
 
 const endpoint = require('../src/importEndpoint');
 
-function addTest(name, input, expected) {
+function addTest(name, translatorID, input, expected) {
 	for (const item of expected) {
 		endpoint.normalizeItem(item);
 	}
@@ -15,12 +17,33 @@ function addTest(name, input, expected) {
 			.set('Content-Type', 'text/plain')
 			.expect(200);
 
+		assert.equal(response.headers['translator-id'], translatorID);
+
 		for (const item of response.body) {
 			endpoint.normalizeItem(item);
 		}
 
 		assert.deepEqual(response.body, expected);
 	});
+}
+
+function parseJSON(name, json, source) {
+	try {
+		return JSON.parse(json);
+	}
+	catch (err) {
+		it(`should import ${name}`, function () {
+			const m = err.message.match(/(.*) at position ([0-9]+)$/);
+			if (m) {
+				const pos = parseInt(m[2]);
+				const line = source.substring(0, source.indexOf(json) + pos).split('\n').length;
+				const column = pos - json.lastIndexOf('\n', pos);
+				throw new Error(`${m[1]} around line ${line}, column ${column}`);
+			}
+			throw err;
+		});
+	}
+	return null;
 }
 
 describe.skip("/import", function () {
@@ -31,35 +54,21 @@ describe.skip("/import", function () {
 		const name = translator.replace(/\.js$/, '');
 		const code = fs.readFileSync(path.join(translators, translator), 'utf-8');
 
-		let start = code.indexOf('/** BEGIN TEST CASES **/');
-		if (start === -1) continue;
-		let cases = null;
+		const marker = code.indexOf('/** BEGIN TEST CASES **/');
+		if (marker === -1) continue;
 
-		try {
-			start = code.indexOf('[', start);
-			if (start === -1) throw new Error('Could not find start of test cases');
+		const header = parseJSON(name, code.replace(/\n}\n[\s\S]*/, '}'), code);
+		if (!header) continue;
+		const start = code.indexOf('[', marker);
+		const end = code.lastIndexOf(']') + 1;
 
-			const end = code.lastIndexOf(']') + 1;
-			if (end === -1) throw new Error('Could not find end of test cases');
+		const cases = parseJSON(name, code.substring(Math.max(start, marker), Math.max(end, start, marker)), code);
+		if (!cases) continue;
 
-			cases = code.substring(start, end);
-			let caseNo = 0;
-			for (const test of JSON.parse(cases)) {
-				caseNo += 1;
-				if (test.type === 'import') addTest(`${name} # ${caseNo}`, test.input, test.items);
-			}
-
-		} catch (err) {
-			it(`should import ${name}`, function () {
-				const m = err.message.match(/(.*) at position ([0-9]+)$/);
-				if (m && typeof cases === 'string') {
-					const pos = parseInt(m[2]);
-					const line = code.substring(0, start + pos).split('\n').length;
-					const column = pos - cases.lastIndexOf('\n', pos);
-					throw new Error(`${m[1]} around line ${line}, column ${column}`);
-				}
-				throw err;
-			});
+		let caseNo = 0;
+		for (const test of cases) {
+			caseNo += 1;
+			if (test.type === 'import') addTest(`${name} # ${caseNo}`, header.translatorID, test.input, test.items);
 		}
 	}
 });
