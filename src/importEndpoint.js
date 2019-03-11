@@ -41,7 +41,7 @@ module.exports = {
 		var items = await translate.translate({ libraryID: 1 });
 		
 		ctx.set('Content-Type', 'application/json');
-		ctx.set('translator-id', translators[0].translatorID);
+		ctx.set('Zotero-Translator-ID', translators[0].translatorID);
 		
 		// Convert translator JSON to API JSON
 		var newItems = [];

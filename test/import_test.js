@@ -11,7 +11,7 @@ function addTest(name, translatorID, input, expected) {
 			.set('Content-Type', 'text/plain')
 			.expect(200);
 
-		assert.equal(response.headers['translator-id'], translatorID);
+		assert.equal(response.headers['zotero-translator-id'], translatorID);
 
 		assert.deepEqual(response.body, expected);
 	});
@@ -58,7 +58,8 @@ describe.skip("/import", function () {
 		let caseNo = 0;
 		for (const test of cases) {
 			caseNo += 1;
-			if (test.type === 'import') addTest(`${name} # ${caseNo}`, header.translatorID, test.input, test.items);
+			if (test.type !== 'import') continue;
+			addTest(`${name} # ${caseNo}`, header.translatorID, test.input, test.items);
 		}
 	}
 });
