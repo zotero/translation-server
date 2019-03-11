@@ -3,13 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const endpoint = require('../src/importEndpoint');
-
 function addTest(name, translatorID, input, expected) {
-	for (const item of expected) {
-		endpoint.normalizeItem(item);
-	}
-
 	it(`should import ${name}`, async function () {
 		const response = await request()
 			.post('/import')
@@ -18,10 +12,6 @@ function addTest(name, translatorID, input, expected) {
 			.expect(200);
 
 		assert.equal(response.headers['translator-id'], translatorID);
-
-		for (const item of response.body) {
-			endpoint.normalizeItem(item);
-		}
 
 		assert.deepEqual(response.body, expected);
 	});
