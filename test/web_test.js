@@ -1,4 +1,31 @@
+const extract_tests = require('./test_extract');
+
+function addTest(name, translatorID, url, expected, ignoreStatusCode) {
+	it(`should translate a webpage using ${name}`, async function () {
+		const response = await request({ simple: false })
+			.post('/web')
+			.set('Content-Type', 'text/plain')
+			.send(url);
+
+		if (response.statusCode === ignoreStatusCode) return;
+
+		assert.equal(response.statusCode, 200);
+		assert.deepEqual(response.body, expected);
+	});
+}
+
 describe("/web", function () {
+	for (const test of extract_tests('web')) {
+		if (test.error) {
+			it(`should translate a webpage using ${test.name}`, function () {
+				throw new Error(test.error);
+			});
+			continue;
+		}
+
+		addTest(test.name, test.translatorID, test.url, test.items, test.ignoreStatusCode);
+	}
+
 	it("should translate a generic webpage", async function () {
 		var url = testURL + 'plain';
 		var response = await request()
