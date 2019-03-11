@@ -105,7 +105,7 @@ $ curl -d 10.2307/4486062 -H 'Content-Type: text/plain' http://127.0.0.1:1969/se
 Convert items in Zotero API JSON format to a [supported export format](https://github.com/zotero/translation-server/blob/master/src/exportEndpoint.js#L29-L47) (RIS, BibTeX, etc.):
 
 ```
-$ curl --data-binary @items.json -H 'Content-Type: application/json' 'http://127.0.0.1:1969/export?format=bibtex'
+$ curl -d @items.json -H 'Content-Type: application/json' 'http://127.0.0.1:1969/export?format=bibtex'
 ```
 
 ### Import Translation
@@ -114,4 +114,4 @@ Convert items in any [import format](https://www.zotero.org/support/kb/importing
 to the Zotero API JSON format:
 
 ```
-$ curl -d @data.bib -H 'Content-Type: text/plain' http://127.0.0.1:1969/import
+$ curl --data-binary @data.bib -H 'Content-Type: text/plain' http://127.0.0.1:1969/import
