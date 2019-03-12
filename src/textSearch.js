@@ -84,13 +84,11 @@ module.exports = {
 				};
 			}
 			
-			let headers = {};
 			// If there were more results, include a link to the next result set
 			if (result.next) {
-				headers.Link = `</search?start=${result.next}>; rel="next"`;
+				ctx.set('Link', `</search?start=${result.next}>; rel="next"`);
 			}
 			ctx.response.status = 300;
-			ctx.response.headers = headers;
 			
 			
 			//
