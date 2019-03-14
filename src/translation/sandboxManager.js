@@ -30,8 +30,10 @@
  * @param {String|window} sandboxLocation
  */
 var SandboxManager = function(sandboxLocation) {
-	this.sandbox = {"Zotero":{}};
-
+	this.sandbox = {
+		"Zotero":{},
+		Promise,
+	};
 };
 
 SandboxManager.prototype = {

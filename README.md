@@ -53,8 +53,6 @@ It’s also possible to opt out of proxying for specific hosts by using the `NO_
 
 ## Endpoints
 
-Currently supported endpoints in v2 are `/web`, `/search`, and `/export`. `/import` will return soon.
-
 ### Web Translation
 
 #### Retrieve metadata for a webpage:
@@ -109,3 +107,11 @@ Convert items in Zotero API JSON format to a [supported export format](https://g
 ```
 $ curl -d @items.json -H 'Content-Type: application/json' 'http://127.0.0.1:1969/export?format=bibtex'
 ```
+
+### Import Translation
+
+Convert items in any [import format](https://www.zotero.org/support/kb/importing_standardized_formats)
+to the Zotero API JSON format:
+
+```
+$ curl --data-binary @data.bib -H 'Content-Type: text/plain' http://127.0.0.1:1969/import
