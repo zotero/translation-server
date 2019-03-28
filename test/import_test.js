@@ -13,7 +13,19 @@ function addTest(name, translatorID, input, expected) {
 
 		assert.equal(response.headers['zotero-translator-id'], translatorID);
 
-		assert.deepEqual(response.body, expected);
+		for (const items of [expected, response.body]) {
+			for (const item of items) {
+				delete item.key
+				delete item.version
+				delete item.parentItem
+				for (const array of ['tags', 'notes', 'attachments', 'seeAlso']) {
+					if (Array.isArray(item[array]) && !item[array].length) delete item[array];
+				}
+				if (item.tags) item.tags.sort((a, b) => `${a.type}::${a.tag}`.localeCompare(`${b.type}::${b.tag}`))
+			}
+		}
+
+		assert.deepEqual(expected, response.body);
 	});
 }
 
