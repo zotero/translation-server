@@ -53,7 +53,7 @@ Translators.init()
 	if (process.env.NODE_ENV == 'test') return;
 	
 	var port = config.get('port');
-	var host = config.has('host') ? config.get('host') : '0.0.0.0';
+	var host = config.get('host');
 	app.listen(port, host);
 	Debug.log(`Listening on ${host}:${port}`);
 });
