@@ -1,37 +1,38 @@
 {
-  "name": "translation-server",
-  "version": "2.0.0",
-  "description": "Zotero translation server",
-  "license": "AGPL-3.0-only",
-  "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zotero/translation-server-v2"
-  },
-  "dependencies": {
-    "aws-sdk": "^2.326.0",
-    "config": "^1.30.0",
-    "jsdom": "^13.1.0",
-    "koa": "^2.5.1",
-    "koa-bodyparser": "^4.2.1",
-    "koa-route": "^3.2.0",
-    "md5": "^2.2.1",
-    "request": "^2.87.0",
-    "request-promise-native": "^1.0.5",
-    "serverless-http": "^1.6.0",
-    "wicked-good-xpath": "git+https://github.com/zotero/wicked-good-xpath.git#1b88459",
-    "xregexp": "^4.2.0",
-    "yargs": "^12.0.2"
-  },
-  "devDependencies": {
-    "chai": "^4.1.2",
-    "mocha": "^5.2.0",
-    "sinon": "^6.1.4",
-    "supertest": "^3.1.0"
-  },
-  "scripts": {
-    "start": "node src/server.js",
-    "start:debug": "node --inspect src/server.js",
-    "test": "NODE_ENV=test ALLOW_CONFIG_MUTATIONS=1 node_modules/.bin/mocha test/*_test.js"
-  }
+	"name": "translation-server",
+	"version": "2.0.0",
+	"description": "Zotero translation server",
+	"license": "AGPL-3.0-only",
+	"main": "index.js",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/zotero/translation-server-v2"
+	},
+	"dependencies": {
+		"aws-sdk": "^2.326.0",
+		"config": "^1.30.0",
+		"jsdom": "^13.1.0",
+		"koa": "^2.5.1",
+		"koa-bodyparser": "^4.2.1",
+		"koa-route": "^3.2.0",
+		"md5": "^2.2.1",
+		"request": "^2.87.0",
+		"request-promise-native": "^1.0.5",
+		"serverless-http": "^1.6.0",
+		"wicked-good-xpath": "git+https://github.com/zotero/wicked-good-xpath.git#1b88459",
+		"xregexp": "^4.2.0",
+		"yargs": "^12.0.2"
+	},
+	"devDependencies": {
+		"chai": "^4.1.2",
+		"mocha": "^5.2.0",
+		"sinon": "^6.1.4",
+		"supertest": "^3.1.0"
+	},
+	"scripts": {
+		"start": "node src/server.js",
+		"start:debug": "node --inspect src/server.js",
+		"test": "NODE_ENV=test ALLOW_CONFIG_MUTATIONS=1 node_modules/.bin/mocha test/*_test.js",
+		"test:import": "DEBUG_LEVEL=0 NODE_ENV=test ALLOW_CONFIG_MUTATIONS=1 node_modules/.bin/mocha test/import_test.js"
+	}
 }

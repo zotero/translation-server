@@ -13,19 +13,40 @@ function addTest(name, translatorID, input, expected) {
 
 		assert.equal(response.headers['zotero-translator-id'], translatorID);
 
-		for (const items of [expected, response.body]) {
-			for (const item of items) {
-				delete item.key
-				delete item.version
-				delete item.parentItem
-				for (const array of ['tags', 'notes', 'attachments', 'seeAlso']) {
-					if (Array.isArray(item[array]) && !item[array].length) delete item[array];
+		const items = { expected, found: response.body };
+		for (const ef of ['expected', 'found']) {
+			for (const item of items[ef]) {
+				// inline attached notes -- notes are exported as separate items with a parentItem, but the parentItem is going to be different every time the test is ran
+				if (!item.notes) {
+					item.notes = items[ef]
+						.filter(note => (note.itemType === 'note' && note.parentItem === item.key))
+						.map(note => ({ note: note.note, itemType: note.itemType}));
 				}
-				if (item.tags) item.tags.sort((a, b) => `${a.type}::${a.tag}`.localeCompare(`${b.type}::${b.tag}`))
+			}
+			// remove notes now inlined
+			items[ef] = items[ef].filter(item => (item.itemType !== 'note' || !item.parentItem));
+
+			for (const item of items[ef]) {
+				// remove purely administrative fields -- must be done in 2nd run because the key/parentItem are required in the 1st run for inlining notes
+				delete item.key;
+				delete item.version;
+				delete item.parentItem;
+
+				// remove empty arrays to simplify comparison
+				for (const prop of ['tags', 'notes', 'attachments', 'seeAlso']) {
+					if (Array.isArray(item[prop]) && !item[prop].length) {
+						delete item[prop];
+					}
+				}
+
+				// sort tags for stable comparison
+				if (item.tags) {
+					item.tags.sort((a, b) => `${a.type}::${a.tag}`.localeCompare(`${b.type}::${b.tag}`));
+				}
 			}
 		}
 
-		assert.deepEqual(expected, response.body);
+		assert.deepEqual(items.expected, items.found);
 	});
 }
 
@@ -48,10 +69,12 @@ function parseJSON(name, json, source) {
 	return null;
 }
 
-describe.skip("/import", function () {
+(process.env.IMPORT_TESTS ? describe : describe.skip)("/import", function () {
 	const translators = path.join(__dirname, '../modules/translators');
 	for (const translator of fs.readdirSync(translators)) {
 		if (!translator.endsWith('.js')) continue;
+		// this is temporary while bringing the import test cases up to notch
+		if (!process.env.IMPORT_TESTS.includes(translator)) continue;
 
 		const name = translator.replace(/\.js$/, '');
 		const code = fs.readFileSync(path.join(translators, translator), 'utf-8');

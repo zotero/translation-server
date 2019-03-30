@@ -46,7 +46,7 @@ app.use(_.post('/search', SearchEndpoint.handle.bind(SearchEndpoint)));
 app.use(_.post('/export', ExportEndpoint.handle.bind(ExportEndpoint)));
 app.use(_.post('/import', ImportEndpoint.handle.bind(ImportEndpoint)));
 
-Debug.init(1);
+Debug.init(process.env.DEBUG_LEVEL ? parseInt(process.env.DEBUG_LEVEL) : 1);
 Translators.init()
 .then(function () {
 	// Don't start server in test mode, since it's handled by supertest
