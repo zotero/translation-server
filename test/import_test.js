@@ -3,6 +3,10 @@
 const fs = require('fs');
 const path = require('path');
 
+function flatten(array) {
+	return [].concat.apply([], array);
+}
+
 function addTest(name, translatorID, input, expected) {
 	it(`should import ${name}`, async function () {
 		const response = await request()
@@ -13,7 +17,11 @@ function addTest(name, translatorID, input, expected) {
 
 		assert.equal(response.headers['zotero-translator-id'], translatorID);
 
-		const items = { expected, found: response.body };
+		const items = {
+			expected: flatten(expected.map(item => Zotero.Utilities.itemToAPIJSON(item))), // normalize and flatten results
+			found: response.body,
+		};
+
 		for (const ef of ['expected', 'found']) {
 			for (const item of items[ef]) {
 				// inline attached notes -- notes are exported as separate items with a parentItem, but the parentItem is going to be different every time the test is ran
