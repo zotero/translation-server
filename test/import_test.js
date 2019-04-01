@@ -40,11 +40,9 @@ function addTest(name, translatorID, input, expected) {
 				delete item.version;
 				delete item.parentItem;
 
-				// remove empty arrays to simplify comparison
-				for (const prop of ['tags', 'notes', 'attachments', 'seeAlso']) {
-					if (Array.isArray(item[prop]) && !item[prop].length) {
-						delete item[prop];
-					}
+				// remove empty array to simplify comparison
+				if (Array.isArray(item.tags) && !item.tags.length) {
+					delete item.tags;
 				}
 
 				// sort tags for stable comparison
@@ -81,8 +79,6 @@ function parseJSON(name, json, source) {
 	const translators = path.join(__dirname, '../modules/translators');
 	for (const translator of fs.readdirSync(translators)) {
 		if (!translator.endsWith('.js')) continue;
-		// this is temporary while bringing the import test cases up to notch
-		if (!process.env.IMPORT_TESTS.includes(translator)) continue;
 
 		const name = translator.replace(/\.js$/, '');
 		const code = fs.readFileSync(path.join(translators, translator), 'utf-8');
