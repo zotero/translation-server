@@ -25,10 +25,12 @@
 
 var config = require('config');
 var request = require('request');
+var iconv = require('iconv-lite');
 var url = require('url');
 var jsdom = require('jsdom');
 var { JSDOM } = jsdom;
 var wgxpath = require('wicked-good-xpath');
+var MIMEType = require("whatwg-mimetype"); // Use the same MIME type library as JSDOM
 
 /**
  * Functions for performing HTTP requests
@@ -70,6 +72,10 @@ Zotero.HTTP = new function() {
 	 *         <li>logBodyLength - Length of request body to log</li>
 	 *         <li>timeout - Request timeout specified in milliseconds [default 15000]</li>
 	 *         <li>responseType - The response type of the request from the XHR spec</li>
+	 *         <li>responseTypeMap - A Map of remote content type ('application/x-bibtex') to
+	 *              XHR response type ('text'). 'html' and 'xml' imply isHTML() and isXML() from
+	 *              whatwg-mimetype. Use an empty string for the key to set a fallback response type;
+	 *              otherwise unspecified content types are rejected.</li>
 	 *         <li>successCodes - HTTP status codes that are considered successful, or FALSE to allow all</li>
 	 *     </ul>
 	 * @return {Promise<Object>} A promise resolved with a response object containing:
@@ -123,26 +129,6 @@ Zotero.HTTP = new function() {
 		
 		let {response, body} = await customRequest(method, requestURL, options);
 		
-		if (!response.headers['content-type']) {
-			throw new this.UnsupportedFormatError(requestURL, 'Missing Content-Type header');
-		}
-		
-		// Array of success codes given
-		if (options.successCodes) {
-			var success = options.successCodes.includes(response.statusCode);
-		}
-		// Explicit FALSE means allow any status code
-		else if (options.successCodes === false) {
-			var success = true;
-		}
-		// Otherwise, 2xx is success
-		else {
-			var success = response.statusCode >= 200 && response.statusCode < 300;
-		}
-		if (!success) {
-			throw new Zotero.HTTP.StatusError(requestURL, response.statusCode, response.body);
-		}
-
 		if (options.debug) {
 			Zotero.debug(`HTTP ${response.statusCode} response: ${body}`);
 		}
@@ -153,30 +139,24 @@ Zotero.HTTP = new function() {
 			status: response.statusCode
 		};
 		
-		if (options.responseType == 'document') {
-			let dom;
-			try {
-				body = decodeContent(body, response.headers['content-type']);
-				dom = new JSDOM(body, {
-					url: result.responseURL,
-					// Inform JSDOM what content type it's parsing,
-					// so it could reject unsupported content types
-					contentType: response.headers['content-type']
-				});
-			}
-			catch (e) {
-				if (e.message.includes('not a HTML or XML content type')) {
-					Zotero.debug(e, 1)
-					throw new this.UnsupportedFormatError(result.responseURL, e.message);
-				}
-				throw e;
-			}
+		var mimeType = new MIMEType(response.headers['content-type']);
+		var responseType = getResponseType(response.headers['content-type'], options);
+		result.type = responseType;
+		
+		if (responseType == 'document') {
+			body = decodeContent(body, response.headers['content-type']);
+			let dom = new JSDOM(body, {
+				url: result.responseURL,
+				// Inform JSDOM what content type it's parsing,
+				// so it could reject unsupported content types
+				contentType: response.headers['content-type']
+			});
+			
 			wgxpath.install(dom.window, true);
 			result.response = dom.window.document;
 			
-			// Follow meta redirects
-			if (response.headers['content-type']
-					&& response.headers['content-type'].startsWith('text/html')) {
+			// Follow meta redirects in HTML files
+			if (mimeType.isHTML()) {
 				let meta = result.response.querySelector('meta[http-equiv=refresh]');
 				if (meta && meta.getAttribute('content')) {
 					let parts = meta.getAttribute('content').split(/;\s*url=/);
@@ -192,11 +172,20 @@ Zotero.HTTP = new function() {
 				}
 			}
 		}
-		else if (options.responseType == 'json') {
+		else if (responseType == 'json') {
 			result.response = JSON.parse(body.toString());
 		}
-		else if (!options.responseType || options.responseType == 'text') {
-			body = body.toString();
+		else if (responseType == 'text') {
+			let charset = mimeType.parameters.get('charset');
+			// Treat unknown charset as utf-8
+			if (!charset) {
+				charset = 'utf8';
+			}
+			else if (!iconv.encodingExists(charset)) {
+				Zotero.debug(`Unknown charset ${charset} -- decoding as UTF-8`);
+				charset = 'utf8';
+			}
+			body = iconv.decode(body, charset);
 			result.response = body;
 			result.responseText = body;
 		}
@@ -319,7 +308,6 @@ Zotero.HTTP = new function() {
  *
  * TODO: Remove this code when https://github.com/jsdom/jsdom/issues/2495 will be solved
  */
-const MIMEType = require("whatwg-mimetype");
 const sniffHTMLEncoding = require("html-encoding-sniffer");
 const whatwgEncoding = require("whatwg-encoding");
 
@@ -389,6 +377,54 @@ function customRequest(method, requestURL, options) {
 			.on('response', function (res) {
 				if (returned) return;
 				response = res;
+				
+				if (!response.headers['content-type']) {
+					returned = true;
+					return reject(new Zotero.HTTP.UnsupportedFormatError(requestURL, 'Missing Content-Type header'));
+				}
+				
+				// Check if the status code is allowed
+				// Array of success codes given
+				if (options.successCodes) {
+					var success = options.successCodes.includes(response.statusCode);
+				}
+				// Explicit FALSE means allow any status code
+				else if (options.successCodes === false) {
+					var success = true;
+				}
+				// Otherwise, 2xx is success
+				else {
+					var success = response.statusCode >= 200 && response.statusCode < 300;
+				}
+				if (!success) {
+					returned = true;
+					return reject(new Zotero.HTTP.StatusError(requestURL, response.statusCode, response.body));
+				}
+				
+				// Check Content-Type before starting the download
+				let supported = true;
+				let mimeType = new MIMEType(response.headers['content-type']);
+				if (options.responseType == 'document') {
+					supported = mimeType.isHTML() || mimeType.isXML();
+				}
+				else if (options.responseTypeMap) {
+					let map = options.responseTypeMap;
+					supported = (map.has('html') && mimeType.isHTML())
+						|| (map.has('xml') && mimeType.isXML())
+						|| map.has(mimeType.essence)
+						// An empty string for a key allows unspecified types as text
+						|| map.has('');
+				}
+				
+				if (!supported) {
+					req.abort();
+					returned = true;
+					return reject(new Zotero.HTTP.UnsupportedFormatError(
+						requestURL,
+						response.headers['content-type'] + ' is not supported'
+					));
+				}
+				
 				// Content-length doesn't always exists or it can be a length of a gzipped content,
 				// but it's still worth to do the initial size check
 				if (
@@ -399,8 +435,6 @@ function customRequest(method, requestURL, options) {
 					returned = true;
 					reject(new Zotero.HTTP.ResponseSizeError(requestURL));
 				}
-				
-				// TODO: Filter content-type too
 			})
 			.on('end', function () {
 				if (returned) return;
@@ -409,5 +443,25 @@ function customRequest(method, requestURL, options) {
 			});
 	});
 };
+
+function getResponseType(contentType, options) {
+	var mimeType = new MIMEType(contentType);
+	if (options.responseType) {
+		return options.responseType;
+	}
+	if (options.responseTypeMap) {
+		let map = options.responseTypeMap;
+		if (map.has('html') && mimeType.isHTML()) {
+			return map.get('html');
+		}
+		if (map.has('xml') && mimeType.isXML()) {
+			return map.get('xml');
+		}
+		if (map.has(mimeType.essence)) {
+			return map.get(mimeType.essence);
+		}
+	}
+	return 'text';
+}
 
 module.exports = Zotero.HTTP;

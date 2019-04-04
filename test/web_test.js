@@ -73,6 +73,21 @@ describe("/web", function () {
 	});
 	
 	
+	it("should translate a remote BibTeX file", async function () {
+		var url = testURL + 'bibtex';
+		var response = await request()
+			.post('/web')
+			.set('Content-Type', 'text/plain')
+			.send(url);
+		assert.equal(response.statusCode, 200);
+		var json = response.body;
+		
+		assert.lengthOf(json, 1);
+		assert.equal(json[0].itemType, 'journalArticle');
+		assert.equal(json[0].title, 'Title');
+	});
+	
+	
 	it("should return 400 if a page returns a 404", async function () {
 		var url = testURL + '404';
 		var response = await request()

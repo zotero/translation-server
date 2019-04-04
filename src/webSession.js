@@ -25,10 +25,12 @@
 
 const config = require('config');
 const urlLib = require('url');
+const { CONTENT_TYPES } = require('./formats');
 const Translate = require('./translation/translate');
 const TLDS = Zotero.require('./translation/tlds');
 const HTTP = require('./http');
 const Translators = require('./translators');
+const ImportEndpoint = require('./importEndpoint');
 const SearchEndpoint = require('./searchEndpoint');
 const { jar: cookieJar } = require('request');
 
@@ -83,6 +85,18 @@ WebSession.prototype.handleURL = async function () {
 			await SearchEndpoint.handleIdentifier(this.ctx, { DOI: doi });
 			return;
 		}
+	}
+	
+	var responseTypeMap = new Map([
+		['html', 'document'],
+		['text/plain', 'text']
+	]);
+	// Force all import content types to text
+	for (let type in CONTENT_TYPES) {
+		let contentType = CONTENT_TYPES[type];
+		if (contentType == 'text/html') continue;
+		if (responseTypeMap.has(contentType)) continue;
+		responseTypeMap.set(contentType, 'text');
 	}
 	
 	var urlsToTry = config.get('deproxifyURLs') ? this.deproxifyURL(url) : [url];
@@ -153,19 +167,28 @@ WebSession.prototype.handleURL = async function () {
 		translate.setRequestHeaders(headers);
 		
 		try {
-			await HTTP.processDocuments(
-				[url],
-				(doc) => {
-					translate.setDocument(doc);
-					// This could be optimized by only running detect on secondary translators
-					// if the first fails, but for now just run detect on all
-					return translate.getTranslators(true);
-				},
+			let req = await Zotero.HTTP.request(
+				"GET",
+				url,
 				{
+					responseTypeMap,
 					cookieSandbox: this._cookieSandbox,
 					headers
 				}
 			);
+			if (req.type === 'document') {
+				translate.setDocument(req.response);
+				// This could be optimized by only running detect on secondary translators
+				// if the first fails, but for now just run detect on all
+				translate.getTranslators(true);
+			}
+			else {
+				Zotero.debug(`Handling ${req.headers['content-type']} as import`);
+				this.ctx.request.body = req.response;
+				await ImportEndpoint.handle(this.ctx);
+				return;
+			}
+			
 			return promise;
 		}
 		catch (e) {

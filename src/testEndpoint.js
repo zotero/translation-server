@@ -1,3 +1,6 @@
+var fs = require('fs');
+var path = require('path');
+
 var TestEndpoint = {
 	handlePlain: async function (ctx, _next) {
 		ctx.response.body = '<html><head><title>Test</title></head><body>Hello</body></html>';
@@ -25,6 +28,13 @@ var TestEndpoint = {
 	
 	handleRedirect: async function (ctx, _next) {
 		ctx.redirect('/test/single');
+	},
+	
+	handleBibTeX: async function (ctx, _next) {
+		ctx.set('Content-Type', 'application/x-bibtex');
+		ctx.response.body = fs
+			.readFileSync(path.join(__dirname, '../test/data/bibtex_response.xml'))
+			.toString();
 	},
 	
 	invalidContentType: async function (ctx, _next) {
