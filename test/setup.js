@@ -1,3 +1,5 @@
+/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "bodyParser" }] */
+
 const config = require('config');
 const request = require('supertest');
 const chai = require('chai');

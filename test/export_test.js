@@ -1,3 +1,5 @@
+/* global assert:false, request:false */
+
 var { JSDOM } = require('jsdom');
 const dom = new JSDOM('<html></html>');
 const DOMParser = dom.window.DOMParser;

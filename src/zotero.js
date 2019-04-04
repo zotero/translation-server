@@ -27,16 +27,6 @@ const path = require('path');
 const config = require('config');
 const fs = require('fs');
 
-const ZOTERO_CONFIG = {
-	REPOSITORY_URL: 'https://repo.zotero.org/repo',
-	REPOSITORY_CHECK_INTERVAL: 86400, // 24 hours
-	REPOSITORY_RETRY_INTERVAL: 3600, // 1 hour
-	REPOSITORY_CHANNEL: 'trunk',
-	BASE_URI: 'https://zotero.org/',
-	WWW_BASE_URL: 'https://www.zotero.org/',
-	API_URL: 'https://api.zotero.org/',
-};
-
 var Zotero = global.Zotero = module.exports = new function() {
 	this.isNode = true;
 	this.isServer = true;

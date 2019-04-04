@@ -1,3 +1,5 @@
+/* eslint no-process-env: "off" */
+
 /*
     ***** BEGIN LICENSE BLOCK *****
     

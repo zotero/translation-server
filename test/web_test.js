@@ -1,3 +1,5 @@
+/* global assert:false, request:false, testURL:false */
+
 describe("/web", function () {
 	it("should translate a generic webpage", async function () {
 		var url = testURL + 'plain';

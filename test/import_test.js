@@ -1,3 +1,5 @@
+/* global assert:false, request:false */
+
 'use strict';
 
 const fs = require('fs');
