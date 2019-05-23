@@ -1,3 +1,5 @@
+/* global assert:false, request:false, testURL:false */
+
 describe("/web", function () {
 	it("should translate a generic webpage", async function () {
 		var url = testURL + 'plain';
@@ -68,6 +70,21 @@ describe("/web", function () {
 		assert.equal(json[0].itemType, 'journalArticle');
 		assert.equal(json[0].title, 'Title');
 		assert.equal(json[0].url, finalURL);
+	});
+	
+	
+	it("should translate a remote BibTeX file", async function () {
+		var url = testURL + 'bibtex';
+		var response = await request()
+			.post('/web')
+			.set('Content-Type', 'text/plain')
+			.send(url);
+		assert.equal(response.statusCode, 200);
+		var json = response.body;
+		
+		assert.lengthOf(json, 1);
+		assert.equal(json[0].itemType, 'journalArticle');
+		assert.equal(json[0].title, 'Title');
 	});
 	
 	
