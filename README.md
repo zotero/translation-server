@@ -19,8 +19,8 @@ The Zotero translation server lets you use [Zotero translators](https://www.zote
 ## Running via docker
 
 ```
-docker build -t translation-server:latest .
-docker run -it -d -p 1969:1969 translation-server:latest
+docker build -t translation-server .
+docker run -d -p 1969:1969 translation-server
 ```
 
 ## Running on AWS Lambda
