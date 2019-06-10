@@ -1,0 +1,6 @@
+.git/
+modules/translators/
+Dockerfile
+docker-compose.*
+npm-debug.log
+node_modules/

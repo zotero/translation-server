@@ -16,6 +16,13 @@ The Zotero translation server lets you use [Zotero translators](https://www.zote
 
 `npm start`
 
+## Running via docker
+
+```
+docker build -t translation-server .
+docker run -d -p 1969:1969 translation-server
+```
+
 ## Running on AWS Lambda
 
 translation-server can also run on AWS Lambda and be accessed through API Gateway. You will need the [AWS SAM CLI](https://docs.aws.amazon.com/lambda/latest/dg/sam-cli-requirements.html) to deploy the server.
