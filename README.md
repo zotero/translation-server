@@ -6,7 +6,7 @@ The Zotero translation server lets you use [Zotero translators](https://www.zote
 
 ## Installation
 
-1. `git clone --recurse-submodules --jobs 4 https://github.com/zotero/translation-server`
+1. `git clone --recurse-submodules https://github.com/zotero/translation-server`
 
 1. `cd translation-server`
 
@@ -18,9 +18,22 @@ The Zotero translation server lets you use [Zotero translators](https://www.zote
 
 ## Running via docker
 
+### Production
+
+Pull from Docker Hub and run as a background process:
+
+```
+docker pull zotero/translation-server
+docker run -d -p 1969:1969 --rm zotero/translation-server
+```
+
+### Development
+
+Build from local repo and run in foreground:
+
 ```
 docker build -t translation-server .
-docker run -d -p 1969:1969 translation-server
+docker run -ti -p 1969:1969 --rm translation-server
 ```
 
 ## Running on AWS Lambda
