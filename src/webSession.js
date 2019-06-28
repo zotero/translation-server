@@ -346,7 +346,7 @@ WebSession.prototype.selectDone = function () {
 	// Make sure items are actually available
 	var haveItems = false;
 	for (let i in selectedItems) {
-		if (this.items[i] === undefined || this.items[i] !== selectedItems[i]) {
+		if (this.items[i] === undefined || JSON.stringify(this.items[i]) !== JSON.stringify(selectedItems[i])) {
 			this.selectCallback([]);
 			this.ctx.throw(409, "Items specified do not match items available");
 		}
