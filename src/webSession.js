@@ -354,9 +354,7 @@ WebSession.prototype.selectDone = function () {
 	// Make sure items are actually available
 	var haveItems = false;
 	for (let i in selectedItems) {
-		// Some translators return object with 'title' and 'checked' properties
-		let title = selectedItems[i].title !== undefined ? selectedItems[i].title : selectedItems[i];
-		if (this.items[i] === undefined || this.items[i] !== title) {
+		if (this.items[i] === undefined || this.items[i] !== selectedItems[i]) {
 			this.selectCallback([]);
 			this.ctx.throw(409, "Items specified do not match items available");
 		}
