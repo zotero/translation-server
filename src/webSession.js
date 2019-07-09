@@ -310,6 +310,14 @@ WebSession.prototype.select = function (url, translate, items, callback, promise
 		items = newItems;
 	}
 	
+	// If translator returns objects with 'title' and 'checked' properties (e.g., PubMed),
+	// extract title
+	for (let i in items) {
+		if (items[i].title) {
+			items[i] = items[i].title;
+		}
+	}
+	
 	this.id = Zotero.Utilities.randomString(15);
 	this.started = Date.now();
 	this.url = url;
@@ -346,7 +354,9 @@ WebSession.prototype.selectDone = function () {
 	// Make sure items are actually available
 	var haveItems = false;
 	for (let i in selectedItems) {
-		if (this.items[i] === undefined || this.items[i] !== selectedItems[i]) {
+		// Some translators return object with 'title' and 'checked' properties
+		let title = selectedItems[i].title !== undefined ? selectedItems[i].title : selectedItems[i];
+		if (this.items[i] === undefined || this.items[i] !== title) {
 			this.selectCallback([]);
 			this.ctx.throw(409, "Items specified do not match items available");
 		}
