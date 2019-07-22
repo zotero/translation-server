@@ -24,6 +24,14 @@ describe("/export", function () {
 		assert.isTrue(response.text.trim().startsWith('@misc'));
 	});
 	
+	it("should set BibTeX access date", async function () {
+		var response = await request()
+			.post('/export?format=bibtex')
+			.send(jsonMinimal)
+			.expect(200);
+		assert.match(response.text, /urldate = {2019-01-14}/);
+	});
+	
 	it("should export to RIS (full)", async function () {
 		var response = await request()
 			.post('/export?format=ris')

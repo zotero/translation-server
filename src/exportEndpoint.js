@@ -49,12 +49,22 @@ var ExportEndpoint = module.exports = {
 			ctx.throw(400, "Input must be an array of items as JSON");
 		}
 		
+		var translator = Zotero.Translators.get(translatorID);
+		var legacy = Services.vc.compare('4.0.27', translator.metadata.minVersion) > 0;
+		
 		// Emulate itemsToExportFormat as best as we can
 		for (let item of items) {
 			// There's no library, so all we have is a key
 			if (!item.uri) {
 				item.uri = item.key;
 				delete item.key;
+			}
+			
+			if (legacy) {
+				// SQL instead of ISO 8601
+				if (item.dateAdded) item.dateAdded = Zotero.Date.isoToSQL(item.dateAdded);
+				if (item.dateModified) item.dateAdded = Zotero.Date.isoToSQL(item.dateModified);
+				if (item.accessDate) item.accessDate = Zotero.Date.isoToSQL(item.accessDate);
 			}
 		}
 		

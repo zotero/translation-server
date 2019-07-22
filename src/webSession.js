@@ -310,6 +310,14 @@ WebSession.prototype.select = function (url, translate, items, callback, promise
 		items = newItems;
 	}
 	
+	// If translator returns objects with 'title' and 'checked' properties (e.g., PubMed),
+	// extract title
+	for (let i in items) {
+		if (items[i].title) {
+			items[i] = items[i].title;
+		}
+	}
+	
 	this.id = Zotero.Utilities.randomString(15);
 	this.started = Date.now();
 	this.url = url;
