@@ -1,9 +1,10 @@
 ---
-version: v3
+version: v4
 base: docker-registry.wikimedia.org/nodejs10-slim:0.0.1
 variants:
   build:
     base: docker-registry.wikimedia.org/nodejs10-devel:0.0.1
+    copies: [local]
     apt: { packages: [git] }
     node:
       requirements: [package.json, package-lock.json]
@@ -21,7 +22,7 @@ variants:
   production:
     runs:
       environment: { NODEJS_V8_HEAP_SIZE_IN_MB: "1700" }
-    copies: prep
+    copies: [prep]
     apt: { packages: [ca-certificates] }
     node: { env: production }
     entrypoint: [ /bin/bash , -c , "node --max-old-space-size=$NODEJS_V8_HEAP_SIZE_IN_MB src/server.js" ]
