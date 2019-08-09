@@ -1,0 +1,7 @@
+@article{Bar19,
+  author = "Foo Bar",
+   title = "Title",
+ journal = "Journal",
+  volume = 123,
+    year = 2019,
+   pages = "123--125"}

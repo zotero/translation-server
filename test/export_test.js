@@ -1,3 +1,5 @@
+/* global assert:false, request:false */
+
 var { JSDOM } = require('jsdom');
 const dom = new JSDOM('<html></html>');
 const DOMParser = dom.window.DOMParser;
@@ -20,6 +22,14 @@ describe("/export", function () {
 			.send(jsonMinimal)
 			.expect(200);
 		assert.isTrue(response.text.trim().startsWith('@misc'));
+	});
+	
+	it("should set BibTeX access date", async function () {
+		var response = await request()
+			.post('/export?format=bibtex')
+			.send(jsonMinimal)
+			.expect(200);
+		assert.match(response.text, /urldate = {2019-01-14}/);
 	});
 	
 	it("should export to RIS (full)", async function () {
@@ -122,6 +132,18 @@ describe("/export", function () {
 		var doc = dp.parseFromString(response.text, 'text/xml');
 		assert.equal(doc.documentElement.localName, 'RDF');
 		assert.equal(doc.querySelector('bibo\\:Webpage dcterms\\:title').textContent, 'Example');
+	});
+	
+	it("should export to TEI", async function () {
+		var response = await request()
+			.post('/export?format=tei')
+			.send(json)
+			.expect(200)
+			.expect('Content-Type', 'text/xml');
+		var dp = new DOMParser();
+		var doc = dp.parseFromString(response.text, 'text/xml');
+		assert.equal(doc.documentElement.localName, 'listBibl');
+		assert.equal(doc.querySelector('monogr title').textContent, 'The New York Times');
 	});
 	
 	it("should export Zotero RDF (full)", async function () {

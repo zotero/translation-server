@@ -1,3 +1,5 @@
+/* eslint no-process-env: "off" */
+
 /*
     ***** BEGIN LICENSE BLOCK *****
     
@@ -36,6 +38,7 @@ const Translators = require('./translators');
 const SearchEndpoint = require('./searchEndpoint');
 const WebEndpoint = require('./webEndpoint');
 const ExportEndpoint = require('./exportEndpoint');
+const ImportEndpoint = require('./importEndpoint');
 
 const app = module.exports = new Koa();
 app.use(cors);
@@ -43,14 +46,16 @@ app.use(bodyParser({ enableTypes: ['text', 'json']}));
 app.use(_.post('/web', WebEndpoint.handle.bind(WebEndpoint)));
 app.use(_.post('/search', SearchEndpoint.handle.bind(SearchEndpoint)));
 app.use(_.post('/export', ExportEndpoint.handle.bind(ExportEndpoint)));
+app.use(_.post('/import', ImportEndpoint.handle.bind(ImportEndpoint)));
 
-Debug.init(1);
+Debug.init(process.env.DEBUG_LEVEL ? parseInt(process.env.DEBUG_LEVEL) : 1);
 Translators.init()
 .then(function () {
 	// Don't start server in test mode, since it's handled by supertest
 	if (process.env.NODE_ENV == 'test') return;
 	
 	var port = config.get('port');
-	app.listen(port);
-	Debug.log(`Listening on 0.0.0.0:${port}`);
+	var host = config.get('host');
+	app.listen(port, host);
+	Debug.log(`Listening on ${host}:${port}`);
 });

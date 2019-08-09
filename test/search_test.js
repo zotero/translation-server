@@ -1,3 +1,5 @@
+/* global assert:false, request:false, sinon:false */
+
 const config = require('config');
 const HTTP = require('../src/http');
 const TextSearch = require('../src/textSearch');

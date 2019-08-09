@@ -84,13 +84,11 @@ module.exports = {
 				};
 			}
 			
-			let headers = {};
 			// If there were more results, include a link to the next result set
 			if (result.next) {
-				headers.Link = `</search?start=${result.next}>; rel="next"`;
+				ctx.set('Link', `</search?start=${result.next}>; rel="next"`);
 			}
 			ctx.response.status = 300;
-			ctx.response.headers = headers;
 			
 			
 			//
@@ -131,6 +129,8 @@ module.exports = {
 
 
 async function search(query, start) {
+	const timeout = config.get('textSearchTimeout') * 1000;
+	const startTime = new Date();
 	const numResults = 3;
 	let identifiers;
 	let moreResults = false;
@@ -166,6 +166,9 @@ async function search(query, start) {
 			translate.setIdentifier(identifier);
 			let translators = await translate.getTranslators();
 			if (!translators.length) {
+				if (new Date() > startTime.getTime() + timeout) {
+					break;
+				}
 				continue;
 			}
 			translate.setTranslator(translators);
@@ -192,6 +195,9 @@ async function search(query, start) {
 			if (e !== translate.ERROR_NO_RESULTS) {
 				Zotero.debug(e, 1);
 			}
+		}
+		if (new Date() > startTime.getTime() + timeout) {
+			break;
 		}
 	}
 	
