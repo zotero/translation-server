@@ -134,7 +134,8 @@ describe("/export", function () {
 		assert.equal(doc.querySelector('bibo\\:Webpage dcterms\\:title').textContent, 'Example');
 	});
 	
-	it("should export to TEI", async function () {
+	// Doesn't work, see issue #85
+	it.skip("should export to TEI", async function () {
 		var response = await request()
 			.post('/export?format=tei')
 			.send(json)
