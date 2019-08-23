@@ -89,6 +89,7 @@ WebSession.prototype.handleURL = async function () {
 	
 	var responseTypeMap = new Map([
 		['html', 'document'],
+		['application/xhtml+xml', 'document'],
 		['text/plain', 'text']
 	]);
 	// Force all import content types to text
