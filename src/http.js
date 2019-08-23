@@ -160,7 +160,7 @@ Zotero.HTTP = new function() {
 			result.response = dom.window.document;
 			
 			// Follow meta redirects in HTML files
-			if (mimeType.isHTML()) {
+			if (mimeType.isHTML() || mimeType.essence == 'application/xhtml+xml') {
 				let meta = result.response.querySelector('meta[http-equiv=refresh]');
 				if (meta && meta.getAttribute('content')) {
 					let parts = meta.getAttribute('content').split(/;\s*url=/);
