@@ -68,39 +68,5 @@ Object.defineProperty(Node.interface.prototype, 'innerText', {
 	configurable: true,
 });
 
-// Translation architecture shims and monkey-patches
-var wgxpath = require('wicked-good-xpath');
-global.XPathResult = wgxpath.XPathResultType;
-var { JSDOM } = require('jsdom');
-var dom = new JSDOM('<html></html>');
-wgxpath.install(dom.window, true);
-global.DOMParser = dom.window.DOMParser;
-global.XMLSerializer = require("w3c-xmlserializer/lib/XMLSerializer").interface;
-global.Services = {
-	// nsIVersionComparator
-	vc: {
-		compare: function (a, b) {
-			// Only worry about the major version (4. vs. 5.)
-			var aParts = a.split(/\./g);
-			var bParts = b.split(/\./g);
-			return aParts[0] - bParts[0];
-		}
-	}
-};
-
-// Shimming innerText property for JSDOM attributes, see https://github.com/jsdom/jsdom/issues/1245
-var Attr = require('jsdom/lib/jsdom/living/generated/Attr');
-Object.defineProperty(Attr.interface.prototype, 'innerText', {
-	get: function() { return this.textContent },
-	set: function(value) { this.textContent = value },
-	configurable: true,
-});
-var Node = require('jsdom/lib/jsdom/living/generated/Node');
-Object.defineProperty(Node.interface.prototype, 'innerText', {
-	get: function() { return this.textContent },
-	set: function(value) { this.textContent = value },
-	configurable: true,
-});
-
 
 module.exports = Zotero.Translate;
