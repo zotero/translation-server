@@ -65,8 +65,8 @@ Zotero.Utilities.itemToAPIJSON = function(item) {
 	
 	var fieldID, itemFieldID;
 	for(var field in item) {
-		if(field === "complete" || field === "itemID" || field === "attachments"
-				|| field === "seeAlso") continue;
+		if(field === "complete" || field === "itemID" || field === "seeAlso")
+			continue;
 		
 		var val = item[field];
 		
@@ -148,6 +148,25 @@ Zotero.Utilities.itemToAPIJSON = function(item) {
 					parentItem: newItem.key,
 					note: note.toString()
 				});
+			}
+		} else if(field === "attachments") {
+			var n = val.length;
+			for(var j=0; j<n; j++) {
+				var attachment = val[j];
+				if(typeof attachment !== "object" || !attachment.url) {
+					Zotero.debug("itemToAPIJSON: Discarded attachment: not an URL");
+					continue;
+				}
+				var apiItem = {
+					itemType:   "attachment",
+					parentItem: newItem.key,
+					mimeType:   attachment.mimeType.toString(),
+					url:        attachment.url.toString(),
+				};
+				if (attachment.title) { // Optional field member, not all attachments have a title
+					apiItem['title'] = attachment.title.toString();
+				}
+				newItems.push(apiItem);
 			}
 		} else if((fieldID = Zotero.ItemFields.getID(field))) {
 			// if content is not a string, either stringify it or delete it
