@@ -120,9 +120,13 @@ describe("/search", function () {
 		assert.equal(response.statusCode, 200);
 		var json = response.body;
 		
-		assert.lengthOf(json, 1);
+		assert.lengthOf(json, 2);
 		assert.equal(json[0].itemType, 'journalArticle');
 		assert.equal(json[0].title, articleTitle1);
+		// This item contains an attachment (URL)
+		assert.equal(json[1].itemType, 'attachment');
+		assert.equal(json[1].parentItem, json[0].key);
+		assert.equal(json[1].mimeType, 'text/html');
 	});
 	
 	it("should translate a PMID with 'pmid:' prefix", async function () {
@@ -133,8 +137,12 @@ describe("/search", function () {
 		assert.equal(response.statusCode, 200);
 		var json = response.body;
 		
-		assert.lengthOf(json, 1);
+		assert.lengthOf(json, 2);
 		assert.equal(json[0].itemType, 'journalArticle');
 		assert.equal(json[0].title, articleTitle1);
+		// This item contains an attachment (URL)
+		assert.equal(json[1].itemType, 'attachment');
+		assert.equal(json[1].parentItem, json[0].key);
+		assert.equal(json[1].mimeType, 'text/html');
 	});
 });
