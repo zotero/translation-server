@@ -98,7 +98,8 @@ Zotero.HTTP = new function() {
 		}, options);
 		
 		options.headers = Object.assign({
-			'User-Agent': config.get('userAgent')
+			'User-Agent': config.get('userAgent'),
+			'Accept': '*/*'
 		}, options.headers);
 	
 		let logBody = '';
