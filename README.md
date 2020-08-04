@@ -1,4 +1,4 @@
-# Zotero Translation Server v2
+# Zotero Translation Server
 
 [![Build Status](https://travis-ci.com/zotero/translation-server.svg?branch=master)](https://travis-ci.com/zotero/translation-server)
 
@@ -6,37 +6,43 @@ The Zotero translation server lets you use [Zotero translators](https://www.zote
 
 ## Installation
 
+### Running via Docker
+
+The easiest way to run a local instance of translation-server is via Docker.
+
+```
+docker pull zotero/translation-server
+docker run -d -p 1969:1969 --rm --name translation-server zotero/translation-server
+```
+
+This will pull the latest image from Docker Hub and run it as a background process on port 1969. Use `docker kill translation-server` to stop it.
+
+### Running from source
+
+First, fetch the source code and install Node dependencies:
+
 1. `git clone --recurse-submodules https://github.com/zotero/translation-server`
 
 1. `cd translation-server`
 
 1. `npm install`
 
-## Running via Node.js
+Once you've set up a local copy of the repo, you can run the server in various ways:
+
+#### Node.js
 
 `npm start`
 
-## Running via docker
+#### Docker (development)
 
-### Production
-
-Pull from Docker Hub and run as a background process:
-
-```
-docker pull zotero/translation-server
-docker run -d -p 1969:1969 --rm zotero/translation-server
-```
-
-### Development
-
-Build from local repo and run in foreground:
+Build from the local repo and run in foreground:
 
 ```
 docker build -t translation-server .
 docker run -ti -p 1969:1969 --rm translation-server
 ```
 
-## Running on AWS Lambda
+#### AWS Lambda
 
 translation-server can also run on AWS Lambda and be accessed through API Gateway. You will need the [AWS SAM CLI](https://docs.aws.amazon.com/lambda/latest/dg/sam-cli-requirements.html) to deploy the server.
 
