@@ -78,7 +78,7 @@ WebSession.prototype.handleURL = async function () {
 		let blacklisted = config.get("blacklistedDomains")
 			.some(x => x && new RegExp(x).test(domain));
 		if (blacklisted) {
-			let doi = Zotero.Utilities.cleanDOI(url);
+			let doi = this.cleanDOIFromURL(url);
 			if (!doi) {
 				this.ctx.throw(500, "An error occurred retrieving the document\n");
 			}
@@ -199,10 +199,9 @@ WebSession.prototype.handleURL = async function () {
 				this.ctx.throw(400, "Remote page not found");
 			}
 			
-			//Parse URL up to '?' for DOI
-			let doi = Zotero.Utilities.cleanDOI(decodeURIComponent(url).match(/[^\?]+/)[0]);
+			let doi = this.cleanDOIFromURL(url);
 			if (doi) {
-				Zotero.debug("Found DOI in URL -- continuing with " + doi);
+				Zotero.debug(`Error translating page -- continuing with DOI ${doi} from URL`);
 				await SearchEndpoint.handleIdentifier(this.ctx, { DOI: doi });
 				return;
 			}
@@ -262,6 +261,16 @@ WebSession.prototype.translate = async function (translate, translators) {
 	}
 	
 	//this._cookieSandbox.clearTimeout();
+	
+	// Check for DOI in URL if no results
+	if (!items.length) {
+		let doi = this.cleanDOIFromURL(translate.location);
+		if (doi) {
+			Zotero.debug(`No results -- continuing with DOI ${doi} from URL`);
+			await SearchEndpoint.handleIdentifier(this.ctx, { DOI: doi });
+			return;
+		}
+	}
 	
 	var json = [];
 	for (let item of items) {
@@ -448,4 +457,14 @@ WebSession.prototype.deproxifyURL = function (url) {
 	urls.sort((a, b) => b.length - a.length);
 	urls.push(urls.shift());
 	return urls;
+};
+
+
+WebSession.prototype.cleanDOIFromURL = function (url) {
+	let doi = Zotero.Utilities.cleanDOI(decodeURIComponent(url));
+	if (doi) {
+		// Stop at query string or ampersand
+		doi = doi.replace(/[?&].*/, '');
+	}
+	return doi || null;
 };
