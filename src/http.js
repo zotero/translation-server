@@ -128,7 +128,10 @@ Zotero.HTTP = new function() {
 		}
 		Zotero.debug(`HTTP ${method} ${requestURL}${logBody}`);
 		
-		let {response, body} = await customRequest(method, requestURL, options);
+		// Parse URL to escape it (e.g., Unicode characters)
+		var parsedURL = new url.URL(requestURL);
+		
+		let {response, body} = await customRequest(method, parsedURL, options);
 		
 		if (options.debug) {
 			Zotero.debug(`HTTP ${response.statusCode} response: ${body}`);
