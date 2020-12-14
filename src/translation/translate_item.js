@@ -79,7 +79,9 @@ ItemGetter.prototype = {
 	
 	"nextCollection":function() {
 		return false;
-	}
+	},
+	
+	exportFiles: function () {}
 }
 ItemGetter.prototype.__defineGetter__("numItemsRemaining", function() { return this._itemsLeft.length });
 
