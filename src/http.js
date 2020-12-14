@@ -1,36 +1,81 @@
 /*
     ***** BEGIN LICENSE BLOCK *****
-    
+
     Copyright © 2011 Center for History and New Media
                      George Mason University, Fairfax, Virginia, USA
                      http://zotero.org
-    
+
     This file is part of Zotero.
-    
+
     Zotero is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     Zotero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Affero General Public License for more details.
-    
+
     You should have received a copy of the GNU Affero General Public License
     along with Zotero.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     ***** END LICENSE BLOCK *****
 */
 
 var config = require('config');
 var request = require('request');
+var throttledRequestsForURLs = [];
+var startedAt = Date.now();
 var iconv = require('iconv-lite');
 var url = require('url');
 var jsdom = require('jsdom');
 var { JSDOM } = jsdom;
 var wgxpath = require('wicked-good-xpath');
 var MIMEType = require("whatwg-mimetype"); // Use the same MIME type library as JSDOM
+
+
+var domainTimeouts = [
+                        {
+                          "domain" : "default",
+                          "timeout" : 0
+                        },
+                        {
+                          "domain" : "brill.com",
+                          "timeout" : 3000
+                        },
+                        {
+                          "domain" : "dialnet.unirioja.es",
+                          "timeout" : 5000
+                        }
+];
+
+
+function getDomainForURL(url) {
+    domain = new URL(url);
+    return domain.hostname;
+}
+
+
+function getTimeoutForDomain(domain) {
+   return domainTimeouts.find(t => t.domain === domain).timeout;
+}
+
+
+function setupThrottledRequestForURLs() {
+    throttledRequestsForURLs['default'] = (require('throttled-request')(request));
+
+    throttledRequestsForURLs['default'].configure({
+       requests: 1,
+       milliseconds: 0
+    });
+    throttledRequestsForURLs['default'].on('request', function () {
+         console.log('Making a request (throttledRequestDefault. Elapsed time: %d ms', Date.now() - startedAt);
+    });
+}
+
+setupThrottledRequestForURLs();
+
 
 /**
  * Functions for performing HTTP requests
@@ -48,17 +93,17 @@ Zotero.HTTP = new function() {
 		this.message = `HTTP request has timed out after ${ms}ms`;
 	};
 	this.TimeoutError.prototype = Object.create(Error.prototype);
-	
+
 	this.ResponseSizeError = function(url) {
 		this.message = `${url} response exceeds max size`;
 	};
 	this.ResponseSizeError.prototype = Object.create(Error.prototype);
-	
+
 	this.UnsupportedFormatError = function (url, msg) {
 		this.message = msg;
 	};
 	this.UnsupportedFormatError.prototype = Object.create(Error.prototype);
-	
+
 	/**
 	 * Get a promise for a HTTP request
 	 *
@@ -96,16 +141,12 @@ Zotero.HTTP = new function() {
 			successCodes: null,
 			maxResponseSize: 50 * 1024 * 1024
 		}, options);
-		
-		if (config.get('persistentCookies')) {
-			options.cookieSandbox = true;
-		}
 
 		options.headers = Object.assign({
 			'User-Agent': config.get('userAgent'),
 			'Accept': '*/*'
 		}, options.headers);
-	
+
 		let logBody = '';
 		if (['GET', 'HEAD'].includes(method)) {
 			if (options.body != null) {
@@ -113,7 +154,7 @@ Zotero.HTTP = new function() {
 			}
 		} else if(options.body) {
 			options.body = typeof options.body == 'string' ? options.body : JSON.stringify(options.body);
-			
+
 			if (!options.headers) options.headers = {};
 			if (!options.headers["Content-Type"]) {
 				options.headers["Content-Type"] = "application/x-www-form-urlencoded";
@@ -122,7 +163,7 @@ Zotero.HTTP = new function() {
 				// Allow XHR to set Content-Type with boundary for multipart/form-data
 				delete options.headers["Content-Type"];
 			}
-			
+
 			logBody = `: ${options.body.substr(0, options.logBodyLength)}` +
 					options.body.length > options.logBodyLength ? '...' : '';
 			// TODO: make sure below does its job in every API call instance
@@ -131,26 +172,26 @@ Zotero.HTTP = new function() {
 			logBody = logBody.replace(/password=[^&]+/, 'password=********');
 		}
 		Zotero.debug(`HTTP ${method} ${requestURL}${logBody}`);
-		
+
 		// Parse URL to escape it (e.g., Unicode characters)
 		var parsedURL = new url.URL(requestURL);
-		
-		let {response, body} = await customRequest(method, parsedURL, options);
-		
+
+		let {response, body} = await customThrottledRequest(method, parsedURL, options);
+
 		if (options.debug) {
 			Zotero.debug(`HTTP ${response.statusCode} response: ${body}`);
 		}
-		
+
 		var result = {
 			responseURL: response.request.uri.href,
 			headers: response.headers,
 			status: response.statusCode
 		};
-		
+
 		var mimeType = new MIMEType(response.headers['content-type']);
 		var responseType = getResponseType(response.headers['content-type'], options);
 		result.type = responseType;
-		
+
 		if (responseType == 'document') {
 			body = decodeContent(body, response.headers['content-type']);
 			let dom = new JSDOM(body, {
@@ -159,10 +200,10 @@ Zotero.HTTP = new function() {
 				// so it could reject unsupported content types
 				contentType: response.headers['content-type']
 			});
-			
+
 			wgxpath.install(dom.window, true);
 			result.response = dom.window.document;
-			
+
 			// Follow meta redirects in HTML files
 			if (mimeType.isHTML() || mimeType.essence == 'application/xhtml+xml') {
 				let meta = result.response.querySelector('meta[http-equiv=refresh]');
@@ -173,7 +214,7 @@ Zotero.HTTP = new function() {
 					if (parts.length == 2 && parseInt(parts[0]) <= 15) {
 						let newURL = parts[1].trim().replace(/^'(.+)'/, '$1');
 						newURL = url.resolve(requestURL, newURL);
-						
+
 						Zotero.debug("Meta refresh to " + newURL);
 						result = Zotero.HTTP.request(method, newURL, options);
 					}
@@ -200,10 +241,10 @@ Zotero.HTTP = new function() {
 		else {
 			throw new Error("Invalid responseType");
 		}
-		
+
 		return result;
 	};
-	
+
 	/**
 	 * Load one or more documents
 	 *
@@ -221,10 +262,10 @@ Zotero.HTTP = new function() {
 			var onDone = arguments[3];
 			var onError = arguments[4];
 		}
-		
+
 		var cookieSandbox = options.cookieSandbox;
 		var headers = options.headers;
-		
+
 		if (typeof urls == "string") urls = [urls];
 		var funcs = urls.map(url => () => {
 			return Zotero.HTTP.request(
@@ -240,7 +281,7 @@ Zotero.HTTP = new function() {
 				return processor(req.response, req.responseURL);
 			});
 		});
-		
+
 		// Run processes serially
 		// TODO: Add some concurrency?
 		var f;
@@ -256,15 +297,15 @@ Zotero.HTTP = new function() {
 				throw e;
 			}
 		}
-		
+
 		// Deprecated
 		if (onDone) {
 			onDone();
 		}
-		
+
 		return results;
 	}
-	
+
 	/**
 	* Send an HTTP GET request
 	*
@@ -285,7 +326,7 @@ Zotero.HTTP = new function() {
 		});
 		return true;
 	};
-	
+
 	/**
 	* Send an HTTP POST request
 	*
@@ -325,12 +366,12 @@ function decodeContent(html, contentType) {
 		const mimeType = new MIMEType(contentType);
 		transportLayerEncodingLabel = mimeType.parameters.get("charset");
 	}
-	
+
 	html = Buffer.from(html.buffer, html.byteOffset, html.byteLength);
-	
+
 	let encoding = sniffHTMLEncoding(html, {defaultEncoding: "UTF-8", transportLayerEncodingLabel});
 	html = whatwgEncoding.decode(html, encoding);
-	
+
 	return html;
 }
 
@@ -343,19 +384,51 @@ function decodeContent(html, contentType) {
  * @param {Object} options
  * @return {Promise<Object>} response, body
  */
-function customRequest(method, requestURL, options) {
+
+var getThrottledRequestForURL = (function() {
+    var i = 0;
+    return function(requestURL) {
+        console.log("REQUEST URL: " + requestURL);
+        console.log("Request Number: " + ++i);
+        //return throttledRequestsForURLs[i % 100];
+        let domain = getDomainForURL(requestURL);
+        // Customized request object exists
+        if (throttledRequestsForURLs[domain])
+            return throttledRequestsForURLs[domain];
+        // Create new customized request object if custom value exists
+        var timeoutForDomain = getTimeoutForDomain(domain);
+        if (timeoutForDomain) {
+            throttledRequestsForURLs[domain] = require('throttled-request')(request);
+            throttledRequestsForURLs[domain].configure({
+               requests: 1,
+               milliseconds: timeoutForDomain
+            });
+            throttledRequestsForURLs[domain].on('request', function () {
+                 console.log('Making a request (throttledRequest' + domain + '). Elapsed time: %d ms', Date.now() - startedAt);
+            });
+            console.log("CONFIG: " + i + " - " +  JSON.stringify(throttledRequestsForURLs[domain].get('config')));
+            return throttledRequestsForURLs[domain];
+       }
+       // Return default object
+       return throttledRequestsForURLs['default'];
+    };
+})();
+
+
+function customThrottledRequest(method, requestURL, options) {
+    var throttledRequestForURL = getThrottledRequestForURL(requestURL);
 	return new Promise(function (resolve, reject) {
 		let response;
-		
+
 		// Make sure resolve/reject is called only once even if request.js
 		// is emitting events when it shouldn't
 		let returned = false;
-		
+
 		// Store buffers in array, because concatenation operation is is unbelievably slow
 		let buffers = [];
 		let bufferLength = 0;
-		
-		let req = request({
+
+		let req = throttledRequestForURL({
 			uri: requestURL,
 			method,
 			headers: options.headers,
@@ -372,10 +445,10 @@ function customRequest(method, requestURL, options) {
 			})
 			.on('data', function (chunk) {
 				if (returned) return;
-				
+
 				bufferLength += chunk.length;
 				buffers.push(chunk);
-				
+
 				if (bufferLength > options.maxResponseSize) {
 					req.abort();
 					returned = true;
@@ -385,12 +458,12 @@ function customRequest(method, requestURL, options) {
 			.on('response', function (res) {
 				if (returned) return;
 				response = res;
-				
+
 				if (!response.headers['content-type']) {
 					returned = true;
 					return reject(new Zotero.HTTP.UnsupportedFormatError(requestURL, 'Missing Content-Type header'));
 				}
-				
+
 				// Check if the status code is allowed
 				// Array of success codes given
 				if (options.successCodes) {
@@ -408,7 +481,7 @@ function customRequest(method, requestURL, options) {
 					returned = true;
 					return reject(new Zotero.HTTP.StatusError(requestURL, response.statusCode, response.body));
 				}
-				
+
 				// Check Content-Type before starting the download
 				let supported = true;
 				let mimeType = new MIMEType(response.headers['content-type']);
@@ -423,7 +496,7 @@ function customRequest(method, requestURL, options) {
 						// An empty string for a key allows unspecified types as text
 						|| map.has('');
 				}
-				
+
 				if (!supported) {
 					req.abort();
 					returned = true;
@@ -432,7 +505,7 @@ function customRequest(method, requestURL, options) {
 						response.headers['content-type'] + ' is not supported'
 					));
 				}
-				
+
 				// Content-length doesn't always exists or it can be a length of a gzipped content,
 				// but it's still worth to do the initial size check
 				if (
@@ -443,6 +516,7 @@ function customRequest(method, requestURL, options) {
 					returned = true;
 					reject(new Zotero.HTTP.ResponseSizeError(requestURL));
 				}
+                console.log('Got response. Elapsed time: %d ms', Date.now() - startedAt);
 			})
 			.on('end', function () {
 				if (returned) return;
