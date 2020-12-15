@@ -35,18 +35,18 @@ var wgxpath = require('wicked-good-xpath');
 var MIMEType = require("whatwg-mimetype"); // Use the same MIME type library as JSDOM
 
 
-var domainTimeouts = [
+var domainRequestIntervals = [
                         {
                           "domain" : "default",
-                          "timeout" : 0
+                          "requestInterval" : 0
                         },
                         {
                           "domain" : "brill.com",
-                          "timeout" : 1000
+                          "requestInterval" : 1000
                         },
                         {
                           "domain" : "dialnet.unirioja.es",
-                          "timeout" : 5000
+                          "requestInterval" : 5000
                         }
 ];
 
@@ -57,18 +57,18 @@ function getDomainForURL(url) {
 }
 
 
-function getTimeoutForDomain(domain) {
-   domainTimeout = domainTimeouts.find(t => t.domain === domain);
-   return domainTimeout ? domainTimeout.timeout : 0;
+function getRequestIntervalForDomain(domain) {
+   domainRequestInterval = domainRequestIntervals.find(t => t.domain === domain);
+   return domainRequestInterval ? domainRequestInterval.requestInterval : 0;
 }
 
 
 function setupThrottledRequestForURLs() {
-    throttledRequestsForURLs['default'] = (require('throttled-request')(request));
-
+    throttledRequestsForURLs['default'] = require('throttled-request')(request);
+    var defaultRequestInterval = getRequestIntervalForDomain('default');
     throttledRequestsForURLs['default'].configure({
        requests: 1,
-       milliseconds: 0
+       milliseconds: defaultRequestInterval
     });
     throttledRequestsForURLs['default'].on('request', function () {
          console.log('Making a request (throttledRequestDefault. Elapsed time: %d ms', Date.now() - startedAt);
@@ -397,12 +397,12 @@ var getThrottledRequestForURL = (function() {
         if (throttledRequestsForURLs[domain])
             return throttledRequestsForURLs[domain];
         // Create new customized request object if custom value exists
-        var timeoutForDomain = getTimeoutForDomain(domain);
-        if (timeoutForDomain) {
+        var requestIntervalForDomain = getRequestIntervalForDomain(domain);
+        if (requestIntervalForDomain) {
             throttledRequestsForURLs[domain] = require('throttled-request')(request);
             throttledRequestsForURLs[domain].configure({
                requests: 1,
-               milliseconds: timeoutForDomain
+               milliseconds: requestIntervalForDomain
             });
             throttledRequestsForURLs[domain].on('request', function () {
                  console.log('Making a request (throttledRequest' + domain + '). Elapsed time: %d ms', Date.now() - startedAt);
