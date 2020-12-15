@@ -42,7 +42,7 @@ var domainTimeouts = [
                         },
                         {
                           "domain" : "brill.com",
-                          "timeout" : 3000
+                          "timeout" : 1000
                         },
                         {
                           "domain" : "dialnet.unirioja.es",
@@ -58,7 +58,8 @@ function getDomainForURL(url) {
 
 
 function getTimeoutForDomain(domain) {
-   return domainTimeouts.find(t => t.domain === domain).timeout;
+   domainTimeout = domainTimeouts.find(t => t.domain === domain);
+   return domainTimeout ? domainTimeout.timeout : 0;
 }
 
 
@@ -136,7 +137,7 @@ Zotero.HTTP = new function() {
 			cookieSandbox: request.jar(),
 			debug: false,
 			logBodyLength: 1024,
-			timeout: 15000,
+			timeout: 90000,
 			responseType: '',
 			successCodes: null,
 			maxResponseSize: 50 * 1024 * 1024
