@@ -1,25 +1,25 @@
 /*
     ***** BEGIN LICENSE BLOCK *****
-    
+
     Copyright © 2018 Corporation for Digital Scholarship
                      Vienna, Virginia, USA
                      https://www.zotero.org
-    
+
     This file is part of Zotero.
-    
+
     Zotero is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     Zotero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Affero General Public License for more details.
-    
+
     You should have received a copy of the GNU Affero General Public License
     along with Zotero.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     ***** END LICENSE BLOCK *****
 */
 
@@ -52,9 +52,9 @@ WebSession.prototype.handleURL = async function () {
 		await this.selectDone();
 		return;
 	}
-	
+
 	var url = this.data;
-	
+
 	// Forward supported headers
 	var headers = {};
 	for (let header of FORWARDED_HEADERS) {
@@ -63,14 +63,14 @@ WebSession.prototype.handleURL = async function () {
 			headers[header] = this.ctx.headers[lc];
 		}
 	}
-	
+
 	try {
 		var parsedURL = urlLib.parse(url);
 	}
 	catch (e) {
 		this.ctx.throw(400, "Invalid URL provided\n");
 	}
-	
+
 	// Check domain
 	var m = url.match(/https?:\/\/([^/]+)/);
 	if (m) {
@@ -86,7 +86,7 @@ WebSession.prototype.handleURL = async function () {
 			return;
 		}
 	}
-	
+
 	var responseTypeMap = new Map([
 		['html', 'document'],
 		['application/xhtml+xml', 'document'],
@@ -99,14 +99,14 @@ WebSession.prototype.handleURL = async function () {
 		if (responseTypeMap.has(contentType)) continue;
 		responseTypeMap.set(contentType, 'text');
 	}
-	
+
 	var urlsToTry = config.get('deproxifyURLs') ? this.deproxifyURL(url) : [url];
 	for (let i = 0; i < urlsToTry.length; i++) {
 		let url = urlsToTry[i];
 		if (urlsToTry.length > 1) {
 			Zotero.debug("Trying " + url);
 		}
-		
+
 		/*let runningInstance;
 		if ((runningInstance = Zotero.Server.Translation.waitingForSelection[data.sessionid])
 				&& data.items) {
@@ -117,17 +117,17 @@ WebSession.prototype.handleURL = async function () {
 			runningInstance.selectDone(data.items);
 			break;
 		}*/
-		
+
 		// New request
 		this._cookieSandbox = cookieJar();
-		
+
 		let resolve;
 		let reject;
 		let promise = new Promise(function () {
 			resolve = arguments[0];
 			reject = arguments[1];
 		});
-		
+
 		let translate = new Translate.Web();
 		let translatePromise;
 		translate.setHandler("translators", async function (translate, translators) {
@@ -135,7 +135,7 @@ WebSession.prototype.handleURL = async function () {
 			if (this.options.single) {
 				translators = translators.filter(t => t.itemType != 'multiple');
 			}
-			
+
 			try {
 				translatePromise = this.translate(translate, translators);
 				await translatePromise;
@@ -166,7 +166,7 @@ WebSession.prototype.handleURL = async function () {
 		});
 		translate.setCookieSandbox(this._cookieSandbox);
 		translate.setRequestHeaders(headers);
-		
+
 		try {
 			let req = await Zotero.HTTP.request(
 				"GET",
@@ -189,32 +189,28 @@ WebSession.prototype.handleURL = async function () {
 				await ImportEndpoint.handle(this.ctx);
 				return;
 			}
-			
+
 			return promise;
 		}
 		catch (e) {
 			Zotero.debug(e, 1);
-			
+            // Originally existing DOI fallback functionality was
+            // removed to prevent upload of records with missing fields
+            // due to limited DOI translator capabilities
+            // c.f. https://github.com/ubtue/DatenProbleme/issues/1283
+
 			if (e instanceof Zotero.HTTP.StatusError && e.status == 404) {
 				this.ctx.throw(400, "Remote page not found");
 			}
-			
-			//Parse URL up to '?' for DOI
-			let doi = Zotero.Utilities.cleanDOI(decodeURIComponent(url).match(/[^\?]+/)[0]);
-			if (doi) {
-				Zotero.debug("Found DOI in URL -- continuing with " + doi);
-				await SearchEndpoint.handleIdentifier(this.ctx, { DOI: doi });
-				return;
-			}
-			
+
 			if (e instanceof Zotero.HTTP.ResponseSizeError) {
 				this.ctx.throw(400, "Response exceeds max size");
 			}
-			
+
 			if (e instanceof Zotero.HTTP.UnsupportedFormatError) {
 				this.ctx.throw(400, "The remote document is not in a supported format");
 			}
-			
+
 			// No more URLs to try
 			if (i == urlsToTry.length - 1) {
 				this.ctx.throw(500, "An error occurred retrieving the document");
@@ -236,7 +232,7 @@ WebSession.prototype.translate = async function (translate, translators) {
 		this.saveWebpage(translate);
 		return;
 	}
-	
+
 	var translator;
 	var items;
 	while (translator = translators.shift()) {
@@ -250,19 +246,19 @@ WebSession.prototype.translate = async function (translate, translators) {
 		catch (e) {
 			Zotero.debug("Translation using " + translator.label + " failed", 1);
 			Zotero.debug(e, 1);
-			
+
 			// If no more translators, save as webpage
 			if (!translators.length) {
 				this.saveWebpage(translate);
 				return;
 			}
-			
+
 			// Try next translator
 		}
 	}
-	
+
 	//this._cookieSandbox.clearTimeout();
-	
+
 	var json = [];
 	for (let item of items) {
 		json.push(...Zotero.Utilities.itemToAPIJSON(item));
@@ -281,7 +277,7 @@ WebSession.prototype.saveWebpage = function (translate) {
 		// XXX better status code?
 		this.ctx.throw(501, "No translators available\n");
 	}
-	
+
 	// TEMP: Return basic webpage item for HTML
 	let description = head.querySelector('meta[name=description]');
 	if (description) {
@@ -310,7 +306,7 @@ WebSession.prototype.select = function (url, translate, items, callback, promise
 		}
 		items = newItems;
 	}
-	
+
 	// If translator returns objects with 'title' and 'checked' properties (e.g., PubMed),
 	// extract title
 	for (let i in items) {
@@ -318,7 +314,7 @@ WebSession.prototype.select = function (url, translate, items, callback, promise
 			items[i] = items[i].title;
 		}
 	}
-	
+
 	this.id = Zotero.Utilities.randomString(15);
 	this.started = Date.now();
 	this.url = url;
@@ -326,7 +322,7 @@ WebSession.prototype.select = function (url, translate, items, callback, promise
 	this.items = items;
 	this.selectCallback = callback;
 	this.translatePromise = promise;
-	
+
 	// Send "Multiple Choices" HTTP response
 	//this._cookieSandbox.clearTimeout();
 	this.ctx.response.status = 300;
@@ -343,15 +339,15 @@ WebSession.prototype.select = function (url, translate, items, callback, promise
 WebSession.prototype.selectDone = function () {
 	var url = this.data.url;
 	var selectedItems = this.data.items;
-	
+
 	if (this.url != url) {
 		this.ctx.throw(409, "'url' does not match URL in session");
 	}
-	
+
 	if (!selectedItems) {
 		this.ctx.throw(400, "'items' not provided");
 	}
-	
+
 	// Make sure items are actually available
 	var haveItems = false;
 	for (let i in selectedItems) {
@@ -361,16 +357,16 @@ WebSession.prototype.selectDone = function () {
 		}
 		haveItems = true;
 	}
-	
+
 	// Make sure at least one item was specified
 	if (!haveItems) {
 		this.selectCallback([]);
 		this.ctx.throw(400, "No items specified");
 	}
-	
+
 	// Run select callback
 	this.selectCallback(selectedItems);
-	
+
 	// The original translate promise in this.translate() from the first request is stalled while
 	// waiting for item select from the client. When the follow-up request comes in, the new ctx
 	// object is swapped in by the endpoint code, and the select callback above allows the
@@ -410,7 +406,7 @@ WebSession.prototype.deproxifyURL = function (url) {
 	var urlToProxy = {
 		[url]: null
 	};
-	
+
 	// if there is a subdomain that is also a TLD, also test against URI with the domain
 	// dropped after the TLD
 	// (i.e., www.nature.com.mutex.gmu.edu => www.nature.com)
@@ -426,7 +422,7 @@ WebSession.prototype.deproxifyURL = function (url) {
 			hostnameParts.push(host.split('.'));
 			hostnameParts[1].splice(0, 1, ...(hostnameParts[1][0].replace(/-/g, '.').split('.')));
 		}
-		
+
 		for (let i=0; i < hostnameParts.length; i++) {
 			let parts = hostnameParts[i];
 			// If hostnameParts has two entries, then the second one is with replaced hyphens
