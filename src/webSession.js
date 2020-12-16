@@ -194,6 +194,10 @@ WebSession.prototype.handleURL = async function () {
 		}
 		catch (e) {
 			Zotero.debug(e, 1);
+            // Originally existing DOI fallback functionality was
+            // removed to prevent upload of records with missing fields
+            // due to limited DOI translator capabilities
+            // c.f. https://github.com/ubtue/DatenProbleme/issues/1283
 
 			if (e instanceof Zotero.HTTP.StatusError && e.status == 404) {
 				this.ctx.throw(400, "Remote page not found");
