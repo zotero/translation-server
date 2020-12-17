@@ -41,12 +41,12 @@ var domainRequestIntervals = [
                           "requestInterval" : 0
                         },
                         {
-                          "domain" : "brill.com",
+                          "domain" : "journals.sagepub.com",
                           "requestInterval" : 1000
                         },
                         {
                           "domain" : "dialnet.unirioja.es",
-                          "requestInterval" : 5000
+                          "requestInterval" : 1000
                         }
 ];
 
@@ -58,21 +58,13 @@ function getDomainForURL(url) {
 
 
 function getRequestIntervalForDomain(domain) {
-   domainRequestInterval = domainRequestIntervals.find(t => t.domain === domain);
-   return domainRequestInterval ? domainRequestInterval.requestInterval : 0;
+    domainRequestInterval = domainRequestIntervals.find(t => t.domain === domain);
+    return domainRequestInterval ? domainRequestInterval.requestInterval : 0;
 }
 
 
 function setupThrottledRequestForURLs() {
-    throttledRequestsForURLs['default'] = require('throttled-request')(request);
-    var defaultRequestInterval = getRequestIntervalForDomain('default');
-    throttledRequestsForURLs['default'].configure({
-       requests: 1,
-       milliseconds: defaultRequestInterval
-    });
-    throttledRequestsForURLs['default'].on('request', function () {
-         console.log('Making a request (throttledRequestDefault. Elapsed time: %d ms', Date.now() - startedAt);
-    });
+    generateThrottledRequest('default', getRequestIntervalForDomain('default'));
 }
 
 setupThrottledRequestForURLs();
@@ -137,7 +129,7 @@ Zotero.HTTP = new function() {
 			cookieSandbox: request.jar(),
 			debug: false,
 			logBodyLength: 1024,
-			timeout: 90000,
+			timeout: 15000,
 			responseType: '',
 			successCodes: null,
 			maxResponseSize: 50 * 1024 * 1024
@@ -386,12 +378,24 @@ function decodeContent(html, contentType) {
  * @return {Promise<Object>} response, body
  */
 
+function generateThrottledRequest(domain, requestIntervalForDomain) {
+     throttledRequestsForURLs[domain] = require('throttled-request')(request);
+     throttledRequestsForURLs[domain].configure({
+        requests: 1,
+        milliseconds: [requestIntervalForDomain]
+     });
+     throttledRequestsForURLs[domain].on('request', function () {
+          Zotero.debug('Making a request (throttledRequest' + domain + '). Elapsed time: %d ms', Date.now() - startedAt);
+     });
+}
+
+
+
 var getThrottledRequestForURL = (function() {
     var i = 0;
     return function(requestURL) {
-        console.log("REQUEST URL: " + requestURL);
-        console.log("Request Number: " + ++i);
-        //return throttledRequestsForURLs[i % 100];
+        Zotero.debug("REQUEST URL: " + requestURL);
+        Zotero.debug("Request Number: " + ++i);
         let domain = getDomainForURL(requestURL);
         // Customized request object exists
         if (throttledRequestsForURLs[domain])
@@ -399,24 +403,16 @@ var getThrottledRequestForURL = (function() {
         // Create new customized request object if custom value exists
         var requestIntervalForDomain = getRequestIntervalForDomain(domain);
         if (requestIntervalForDomain) {
-            throttledRequestsForURLs[domain] = require('throttled-request')(request);
-            throttledRequestsForURLs[domain].configure({
-               requests: 1,
-               milliseconds: requestIntervalForDomain
-            });
-            throttledRequestsForURLs[domain].on('request', function () {
-                 console.log('Making a request (throttledRequest' + domain + '). Elapsed time: %d ms', Date.now() - startedAt);
-            });
-            console.log("CONFIG: " + i + " - " +  JSON.stringify(throttledRequestsForURLs[domain].get('config')));
+            generateThrottledRequest(domain, requestIntervalForDomain);
             return throttledRequestsForURLs[domain];
-       }
-       // Return default object
-       return throttledRequestsForURLs['default'];
+        }
+        // Return default object
+        return throttledRequestsForURLs['default'];
     };
 })();
 
 
-function customThrottledRequest(method, requestURL, options) {
+async function customThrottledRequest(method, requestURL, options) {
     var throttledRequestForURL = getThrottledRequestForURL(requestURL);
 	return new Promise(function (resolve, reject) {
 		let response;
@@ -435,7 +431,7 @@ function customThrottledRequest(method, requestURL, options) {
 			headers: options.headers,
 			timeout: options.timeout,
 			body: options.body,
-			gzip: true,
+			gzip: false,
 			followAllRedirects: true,
 			jar: options.cookieSandbox,
 			encoding: null // Get body in a buffer
@@ -517,7 +513,7 @@ function customThrottledRequest(method, requestURL, options) {
 					returned = true;
 					reject(new Zotero.HTTP.ResponseSizeError(requestURL));
 				}
-                console.log('Got response. Elapsed time: %d ms', Date.now() - startedAt);
+                Zotero.debug('Got response. Elapsed time: %d ms', Date.now() - startedAt);
 			})
 			.on('end', function () {
 				if (returned) return;
