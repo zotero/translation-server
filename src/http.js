@@ -385,7 +385,7 @@ function generateThrottledRequest(domain, requestIntervalForDomain) {
         milliseconds: [requestIntervalForDomain]
      });
      throttledRequestsForURLs[domain].on('request', function () {
-          Zotero.debug('Making a request (throttledRequest' + domain + '). Elapsed time: %d ms', Date.now() - startedAt);
+          Zotero.debug('Making a request (throttledRequest' + domain + '). Elapsed time: '  + (Date.now() - startedAt) + ' ms');
      });
 }
 
@@ -513,7 +513,7 @@ async function customThrottledRequest(method, requestURL, options) {
 					returned = true;
 					reject(new Zotero.HTTP.ResponseSizeError(requestURL));
 				}
-                Zotero.debug('Got response. Elapsed time: %d ms', Date.now() - startedAt);
+                Zotero.debug('Got response. Elapsed time: ' + (Date.now() - startedAt) + ' ms');
 			})
 			.on('end', function () {
 				if (returned) return;
