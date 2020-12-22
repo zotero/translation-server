@@ -213,6 +213,19 @@ Zotero.HTTP = new function() {
 					}
 				}
 			}
+
+            // For EBSCO we have a HTTP redirect followed by by JS redirect embedded in HTML
+            // Follow the "redirect" in this case and assemble the target
+            if (getDomainForURL(result.responseURL).match(/ebscohost.com/i)) {
+                let scripts = result.response.querySelectorAll('script');
+                for (script of scripts) {
+                     if (script.innerText.match(/window\.location\.replace/)) {
+                         let newPath = script.innerText.match(/window\.location\.replace\(\'(.+)\'\)\s*\;/)[1];
+                         result = Zotero.HTTP.request(method, 'https://' + getDomainForURL(result.responseURL) + '/' +  newPath,
+                                                      options );
+                     }
+                }
+            }
 		}
 		else if (responseType == 'json') {
 			result.response = JSON.parse(body.toString());
