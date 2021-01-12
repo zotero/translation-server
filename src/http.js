@@ -33,22 +33,7 @@ var jsdom = require('jsdom');
 var { JSDOM } = jsdom;
 var wgxpath = require('wicked-good-xpath');
 var MIMEType = require("whatwg-mimetype"); // Use the same MIME type library as JSDOM
-
-
-var domainRequestIntervals = [
-                        {
-                          "domain" : "default",
-                          "requestInterval" : 0
-                        },
-                        {
-                          "domain" : "journals.sagepub.com",
-                          "requestInterval" : 1000
-                        },
-                        {
-                          "domain" : "dialnet.unirioja.es",
-                          "requestInterval" : 1000
-                        }
-];
+var domainRequestIntervals = config.get('domainRequestIntervals');
 
 
 function getDomainForURL(url) {

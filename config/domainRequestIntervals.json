@@ -1,0 +1,16 @@
+{
+  "domainRequestIntervals": [
+    {
+      "domain": "default",
+      "requestInterval": 0
+    },
+    {
+      "domain": "journals.sagepub.com",
+      "requestInterval": 1000
+    },
+    {
+      "domain": "dialnet.unirioja.es",
+      "requestInterval": 1000
+    }
+  ]
+}
