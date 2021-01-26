@@ -276,6 +276,7 @@ WebSession.prototype.translate = async function (translate, translators) {
 	for (let item of items) {
 		json.push(...Zotero.Utilities.itemToAPIJSON(item));
 	}
+	this.ctx.response.status = 200;
 	this.ctx.response.body = json;
 };
 
