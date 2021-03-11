@@ -56,6 +56,34 @@ describe("/web", function () {
 	});
 	
 	
+	// Simulate a request to a different server without the cached session id
+	it("should return multiple results and perform follow-up translation with unknown session id", async function () {
+		var url = testURL + 'multiple';
+		var response = await request()
+			.post('/web')
+			.set('Content-Type', 'text/plain')
+			.send(url);
+		assert.equal(response.statusCode, 300);
+		var json = response.body;
+		assert.equal(json.url, url);
+		assert.property(json, 'session');
+		assert.deepEqual(json.items, { 0: 'A', 1: 'B', 2: 'C' });
+		
+		delete json.items[1];
+		// Change the session id
+		json.session[0] = json.session[0] == 'a' ? 'b' : 'a';
+		
+		response = await request()
+			.post('/web')
+			.send(json);
+		assert.equal(response.statusCode, 200);
+		json = response.body;
+		assert.lengthOf(json, 2);
+		assert.equal(json[0].title, 'A');
+		assert.equal(json[1].title, 'C');
+	});
+	
+	
 	it("should follow a redirect and use the final URL for translation", async function () {
 		var url = testURL + 'redirect';
 		var finalURL = testURL + 'single';

@@ -1,0 +1,22 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v2
+      
+      - run: git submodule update --init --depth=1 modules/zotero
+      - run: git -C modules/zotero submodule update --init --depth=1 styles
+      - run: git -C modules/zotero submodule update --init --depth=1 chrome/content/zotero/locale/csl
+      - run: git submodule update --init --depth=1 modules/translators
+      
+      - name: Install Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      
+      - run: npm ci
+      - run: npm test

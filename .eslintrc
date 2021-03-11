@@ -1,0 +1,17 @@
+{
+	"env": {
+		"es6": true,
+		"node": true,
+		"mocha": true
+	},
+	"globals": {
+		"Zotero": false
+	},
+	"extends": [
+		"@zotero"
+	],
+	"parserOptions": {
+		"ecmaVersion": 2018
+	},
+	"rules": {}
+}
