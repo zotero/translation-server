@@ -357,6 +357,7 @@ function customRequest(method, requestURL, options) {
 			headers: options.headers,
 			timeout: options.timeout,
 			body: options.body,
+			gzip: true,
 			followAllRedirects: true,
 			jar: options.cookieSandbox,
 			encoding: null // Get body in a buffer
