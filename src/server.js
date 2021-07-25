@@ -32,6 +32,11 @@ const _ = require('koa-route');
 const bodyParser = require('koa-bodyparser');
 const cors = require('./cors');
 
+// Prevent UnhandledPromiseRejection crash in Node 15, though this shouldn't be necessary
+process.on('unhandledRejection', (reason, promise) => {
+    console.log('Unhandled rejection:', reason.stack || reason)
+});
+
 require('./zotero');
 const Debug = require('./debug');
 const Translators = require('./translators');
