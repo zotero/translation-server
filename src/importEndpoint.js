@@ -46,7 +46,7 @@ module.exports = {
 		// Convert translator JSON to API JSON
 		var newItems = [];
 		items.forEach((item) => {
-			newItems.push(...Zotero.Utilities.itemToAPIJSON(item));
+			newItems.push(...Zotero.Utilities.Item.itemToAPIJSON(item));
 		});
 		
 		ctx.response.body = JSON.stringify(newItems, null, 2);

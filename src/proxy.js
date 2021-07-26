@@ -40,7 +40,7 @@
 "use strict";
 
 var url = require('url');
-var TLDS = Zotero.require('./translation/tlds');
+var TLDS = Zotero.requireTranslate('./tlds');
 
 Zotero.Proxies = new function() {
 

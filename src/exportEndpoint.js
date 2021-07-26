@@ -50,7 +50,7 @@ var ExportEndpoint = module.exports = {
 		}
 		
 		var translator = Zotero.Translators.get(translatorID);
-		var legacy = Services.vc.compare('4.0.27', translator.metadata.minVersion) > 0;
+		var legacy = Zotero.Utilities.semverCompare('4.0.27', translator.metadata.minVersion) > 0;
 		
 		// Emulate itemsToExportFormat as best as we can
 		for (let item of items) {

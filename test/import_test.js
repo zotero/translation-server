@@ -20,7 +20,7 @@ function addTest(name, translatorID, input, expected) {
 		assert.equal(response.headers['zotero-translator-id'], translatorID);
 
 		const items = {
-			expected: flatten(expected.map(item => Zotero.Utilities.itemToAPIJSON(item))), // normalize and flatten results
+			expected: flatten(expected.map(item => Zotero.Utilities.Item.itemToAPIJSON(item))), // normalize and flatten results
 			found: response.body,
 		};
 

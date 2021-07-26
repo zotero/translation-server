@@ -84,27 +84,28 @@ Zotero.Prefs = new function(){
 }
 
 /**
- * A custom require function to import modules from the main Zotero codebase
- * @param {String} path
+ * A custom require function to import modules from the translate submodule
+ * @param {String} modulePath
  * @returns {*}
  */
-Zotero.require = function(modulePath) {
-	return require(path.resolve(__dirname, '../modules/zotero/chrome/content/zotero/xpcom/', modulePath));
+Zotero.requireTranslate = function(modulePath) {
+	return require(path.resolve(__dirname, '../modules/translate/src/', modulePath));
 }
 
-Zotero.Promise = require('./promise');
-Zotero.Debug = require('./debug');
+Zotero.requireUtilities = function(modulePath) {
+	return require(path.resolve(__dirname, '../modules/utilities/', modulePath));
+}
+
+Zotero.Promise = Zotero.requireTranslate('./promise');
+Zotero.Debug = Zotero.requireTranslate('./debug');
 Zotero.Translators = require('./translators');
-Zotero.Date = Zotero.require('./date');
-Zotero.OpenURL = Zotero.require('./openurl');
+Zotero.Date = Zotero.requireUtilities('./date');
+Zotero.OpenURL = Zotero.requireUtilities('./openurl');
 Zotero.Utilities = require('./utilities');
-Zotero.Translator = require('./translator');
+Zotero.Translator = Zotero.requireTranslate('./translator');
 Zotero.Translate = require('./translation/translate');
 Zotero.Proxies = require('./proxy').Proxies;
 Zotero.Proxy = require('./proxy').Proxy;
-Zotero.Cite = Zotero.require('./cite.js');
-Zotero.CiteProc = Zotero.require('./citeproc.js');
-Zotero.Notes = Zotero.require('./data/notes.js');
 
 var $rdf = require('./rdf/init');
 if(Zotero.RDF) {
@@ -112,4 +113,5 @@ if(Zotero.RDF) {
 } else {
 	Zotero.RDF = {AJAW:$rdf};
 }
-Zotero = Object.assign(Zotero, require('./cachedTypes'));
+Zotero = Object.assign(Zotero, Zotero.requireTranslate('./cachedTypes'));
+Zotero.setTypeSchema(Zotero.requireTranslate('./resource/zoteroTypeSchemaData'));
