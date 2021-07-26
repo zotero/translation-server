@@ -3,10 +3,10 @@
 	url = https://github.com/zotero/translators
 [submodule "modules/utilities"]
 	path = modules/utilities
-	url = git@github.com:zotero/utilities.git
+	url = https://github.com/zotero/utilities.git
 [submodule "modules/translate"]
 	path = modules/translate
-	url = git@github.com:zotero/translate.git
+	url = https://github.com/zotero/translate.git
 [submodule "modules/zotero-schema"]
 	path = modules/zotero-schema
-	url = git@github.com:zotero/zotero-schema.git
+	url = https://github.com/zotero/zotero-schema.git
