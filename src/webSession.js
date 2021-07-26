@@ -27,7 +27,7 @@ const config = require('config');
 const urlLib = require('url');
 const { CONTENT_TYPES } = require('./formats');
 const Translate = require('./translation/translate');
-const TLDS = Zotero.require('./translation/tlds');
+const TLDS = Zotero.requireTranslate('./tlds');
 const HTTP = require('./http');
 const Translators = require('./translators');
 const ImportEndpoint = require('./importEndpoint');
@@ -274,7 +274,7 @@ WebSession.prototype.translate = async function (translate, translators) {
 	
 	var json = [];
 	for (let item of items) {
-		json.push(...Zotero.Utilities.itemToAPIJSON(item));
+		json.push(...Zotero.Utilities.Item.itemToAPIJSON(item));
 	}
 	this.ctx.response.status = 200;
 	this.ctx.response.body = json;
@@ -304,7 +304,7 @@ WebSession.prototype.saveWebpage = function (translate) {
 		abstractNote: description,
 		accessDate: Zotero.Date.dateToISO(new Date())
 	};
-	this.ctx.response.body = Zotero.Utilities.itemToAPIJSON(data);
+	this.ctx.response.body = Zotero.Utilities.Item.itemToAPIJSON(data);
 };
 
 

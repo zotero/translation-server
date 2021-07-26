@@ -38,7 +38,7 @@ var SearchEndpoint = module.exports = {
 		}
 		
 		// Look for DOI, ISBN, etc.
-		var identifiers = Zotero.Utilities.Internal.extractIdentifiers(data);
+		var identifiers = Zotero.Utilities.extractIdentifiers(data);
 		
 		// Use PMID only if it's the only text in the query, with or without a pmid: prefix
 		if (identifiers.length && identifiers[0].PMID
@@ -89,7 +89,7 @@ var SearchEndpoint = module.exports = {
 		// so we have to return an array with keyed items
 		var newItems = [];
 		items.forEach(item => {
-			newItems.push(...Zotero.Utilities.itemToAPIJSON(item));
+			newItems.push(...Zotero.Utilities.Item.itemToAPIJSON(item));
 		});
 		
 		ctx.response.body = newItems;
