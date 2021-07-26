@@ -32,8 +32,7 @@ var Zotero = global.Zotero = module.exports = new function() {
 	this.isServer = true;
 	this.locale = 'en-US';
 	
-	let rdfData = fs.readFileSync(path.resolve(__dirname, '../modules/zotero/install.rdf')).toString();
-	this.version = rdfData.match('version>([0-9].+)\\.SOURCE</')[1];
+	this.version = "5.0.97";
 	
 	/**
 	 * Debug logging function
