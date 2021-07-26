@@ -106,7 +106,7 @@ Zotero.Translate = require('./translation/translate');
 Zotero.Proxies = require('./proxy').Proxies;
 Zotero.Proxy = require('./proxy').Proxy;
 
-var $rdf = require('./rdf/init');
+var $rdf = Zotero.requireTranslate('./rdf/init');
 if(Zotero.RDF) {
 	Zotero.RDF.AJAW = $rdf;
 } else {
