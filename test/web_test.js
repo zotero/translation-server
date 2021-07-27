@@ -24,10 +24,14 @@ describe("/web", function () {
 			.send(url);
 		assert.equal(response.statusCode, 200);
 		var json = response.body;
-		
-		assert.lengthOf(json, 1);
+		assert.lengthOf(json, 2);
 		assert.equal(json[0].itemType, 'journalArticle');
 		assert.equal(json[0].title, 'Title');
+		// This item contains an snapshot
+		assert.equal(json[1].itemType, 'attachment');
+		assert.equal(json[1].parentItem, json[0].key);
+		assert.equal(json[1].mimeType, 'text/html');
+		assert.equal(json[1].url, url);
 	});
 	
 	
@@ -50,9 +54,11 @@ describe("/web", function () {
 			.send(json);
 		assert.equal(response.statusCode, 200);
 		json = response.body;
-		assert.lengthOf(json, 2);
+		assert.lengthOf(json, 3);
 		assert.equal(json[0].title, 'A');
-		assert.equal(json[1].title, 'C');
+		assert.equal(json[1].parentItem, json[0].key);
+		assert.equal(json[1].url, url);
+		assert.equal(json[2].title, 'C');
 	});
 	
 	
@@ -94,10 +100,15 @@ describe("/web", function () {
 		assert.equal(response.statusCode, 200);
 		var json = response.body;
 		
-		assert.lengthOf(json, 1);
+		assert.lengthOf(json, 2);
 		assert.equal(json[0].itemType, 'journalArticle');
 		assert.equal(json[0].title, 'Title');
 		assert.equal(json[0].url, finalURL);
+		// This item contains an snapshot
+		assert.equal(json[1].itemType, 'attachment');
+		assert.equal(json[1].parentItem, json[0].key);
+		assert.equal(json[1].mimeType, 'text/html');
+		assert.equal(json[1].url, finalURL);
 	});
 	
 	
@@ -138,9 +149,14 @@ describe("/web", function () {
 		assert.equal(response.statusCode, 200);
 		var json = response.body;
 		
-		assert.lengthOf(json, 1);
+		assert.lengthOf(json, 2);
 		assert.equal(json[0].itemType, 'journalArticle');
 		assert.equal(json[0].title, 'Titre');
+		// This item contains an snapshot
+		assert.equal(json[1].itemType, 'attachment');
+		assert.equal(json[1].parentItem, json[0].key);
+		assert.equal(json[1].mimeType, 'text/html');
+		assert.equal(json[1].url, url);
 	});
 	
 	it("should reject non-HTML/XML upstream content types", async function () {
