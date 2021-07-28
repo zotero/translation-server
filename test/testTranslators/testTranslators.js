@@ -25,7 +25,9 @@
 
 'use strict';
 
-process.on('unhandledRejection', (err, p) => { });
+process.on('unhandledRejection', (err, p) => { 
+	console.error(err);
+});
 
 require('../../src/zotero');
 require('../../src/translation/translate');
@@ -35,7 +37,7 @@ const { basename } = require('path');
 const yargs = require('yargs');
 const fs = require('fs').promises;
 const { jar: cookieJar } = require('request');
-const {TranslatorTester} = require('../../modules/zotero/chrome/content/zotero/tools/testTranslators/translatorTester.js');
+const {TranslatorTester} = require('../../modules/translate/testTranslators/translatorTester.js');
 
 let options = yargs
 	.usage(`Usage: ${basename(process.argv[0])} [options]`)
