@@ -10,5 +10,6 @@
 		"CrossrefREST.email": "" // Pass an email to Crossref REST API to utilize the faster servers pool
 	},
 	"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:61.0) Gecko/20100101 Firefox/61.0",
-	"translatorsDirectory": "./modules/translators"
+	"translatorsDirectory": "./modules/translators",
+	"persistentCookies": false // Remember upstream cookies between translation operations. Do not enable for a public service.
 }

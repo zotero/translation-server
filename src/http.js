@@ -97,6 +97,10 @@ Zotero.HTTP = new function() {
 			maxResponseSize: 50 * 1024 * 1024
 		}, options);
 		
+		if (config.get('persistentCookies')) {
+			options.cookieSandbox = true;
+		}
+
 		options.headers = Object.assign({
 			'User-Agent': config.get('userAgent'),
 			'Accept': '*/*'
