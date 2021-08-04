@@ -112,5 +112,5 @@ if(Zotero.RDF) {
 } else {
 	Zotero.RDF = {AJAW:$rdf};
 }
-Zotero = Object.assign(Zotero, Zotero.requireTranslate('./cachedTypes'));
-Zotero.setTypeSchema(Zotero.requireTranslate('./resource/zoteroTypeSchemaData'));
+Zotero = Object.assign(Zotero, Zotero.requireUtilities('./cachedTypes'));
+Zotero.setTypeSchema(Zotero.requireUtilities('./resource/zoteroTypeSchemaData'));
