@@ -34,7 +34,7 @@ const cors = require('./cors');
 
 // Prevent UnhandledPromiseRejection crash in Node 15, though this shouldn't be necessary
 process.on('unhandledRejection', (reason, promise) => {
-    console.log('Unhandled rejection:', reason.stack || reason)
+	Zotero.debug('Unhandled rejection: ' + (reason.stack || reason), 1)
 });
 
 require('./zotero');

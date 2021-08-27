@@ -29,11 +29,13 @@ var TRANSLATOR_TYPES = {"import":1, "export":2, "web":4, "search":8};
 const fs = require('fs');
 const path = require('path');
 
+var Translators = Zotero.requireTranslate('./translators');
+
 /**
  * Singleton to handle loading and caching of translators
  * @namespace
  */
-Translators = new function() {
+Translators = Object.assign(Translators, new function() {
 	var _cache, _translators;
 	var _initialized = false;
 	const infoRe = /^\s*{[\S\s]*?}\s*?[\r\n]/;
@@ -130,6 +132,8 @@ Translators = new function() {
 				continue;
 			}
 			info.code = data;
+			// We don't ever want to reload from disk again (and don't have the code to do that either)
+			info.cacheCode = true;
 			
 			translators.push(info);
 		}
@@ -167,6 +171,14 @@ Translators = new function() {
 			return translators;
 		});
 	};
+
+	this.getCodeForTranslator = Zotero.Promise.method(function (translator) {
+		if (translator.code) {
+			return translator.code;
+		} else {
+			throw new Error(`Code for translator ${translator.translatorID} is missing`);
+		}
+	});
 	
 	/**
 	 * Gets web translators for a specific location
@@ -247,39 +259,6 @@ Translators = new function() {
 		}
 		return newTranslator;
 	}
-}
-
-/**
- * A class to get the code for a set of translators at once
- *
- * @param {Zotero.Translator[]} translators Translators for which to retrieve code
- */
-Translators.CodeGetter = function(translators) {
-	this._translators = translators;
-	this._concurrency = 1;
-};
-
-Translators.CodeGetter.prototype.getCodeFor = async function(i) {
-	let translator = this._translators[i];
-	try {
-		return await translator.getCode()
-	} catch (e) {
-		Zotero.debug(`Failed to retrieve code for ${translator.translatorID}`)
-	};
-};
-
-Translators.CodeGetter.prototype.getAll = function () {
-	var codes = [];
-	// Chain promises with some level of concurrency. If unchained, fires 
-	// off hundreds of xhttprequests on connectors and crashes the extension
-	for (let i = 0; i < this._translators.length; i++) {
-		if (i < this._concurrency) {
-			codes.push(this.getCodeFor(i));
-		} else {
-			codes.push(codes[i-this._concurrency].then(() => this.getCodeFor(i)));
-		}
-	}
-	return Promise.all(codes);
-};
+});
 
 module.exports = Translators;

@@ -101,7 +101,7 @@ module.exports = {
 		}
 		
 		if (result.items.length === 1) {
-			ctx.response.body = Zotero.Utilities.itemToAPIJSON(result.items[0]);
+			ctx.response.body = Zotero.Utilities.Item.itemToAPIJSON(result.items[0]);
 			return;
 		}
 		
