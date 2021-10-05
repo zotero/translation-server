@@ -79,6 +79,10 @@ It’s also possible to opt out of proxying for specific hosts by using the `NO_
 
 ## Endpoints
 
+### Documentation
+
+Swagger documentation is available at http://127.0.0.1:1969/?doc
+
 ### Web Translation
 
 #### Retrieve metadata for a webpage:
