@@ -59,6 +59,8 @@ Zotero.HTTP = new function() {
 	};
 	this.UnsupportedFormatError.prototype = Object.create(Error.prototype);
 	
+	this.maxResponseSize = config.has('maxResponseSize') ? config.get('maxResponseSize') : 50;
+
 	/**
 	 * Get a promise for a HTTP request
 	 *
@@ -94,7 +96,7 @@ Zotero.HTTP = new function() {
 			timeout: 15000,
 			responseType: '',
 			successCodes: null,
-			maxResponseSize: 50 * 1024 * 1024
+			maxResponseSize: this.maxResponseSize * 1024 * 1024
 		}, options);
 		
 		options.headers = Object.assign({
