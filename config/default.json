@@ -5,7 +5,7 @@
 	"identifierSearchLambda": "", // Identifier search Lambda function for text search
 	"port": 1969,
 	"host": "0.0.0.0", // host to listen on
-	"maxResponseSize": 50, // Max size in MB
+	"httpMaxResponseSize": 10, // Max size of requested response to load; triggers 400 ResponseSize error when exceeded
 	"textSearchTimeout": 5,
 	"translators": {
 		"CrossrefREST.email": "" // Pass an email to Crossref REST API to utilize the faster servers pool

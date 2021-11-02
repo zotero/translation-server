@@ -49,6 +49,9 @@ Zotero.HTTP = new function() {
 	};
 	this.TimeoutError.prototype = Object.create(Error.prototype);
 	
+	// Max size of requested response to load; triggers 400 ResponseSizeError when exceeded
+	this.httpMaxResponseSize = ( config.has('httpMaxResponseSize') ? config.get('httpMaxResponseSize') : 50 ) * 1024 * 1024;
+
 	this.ResponseSizeError = function(url) {
 		this.message = `${url} response exceeds max size`;
 	};
@@ -59,8 +62,6 @@ Zotero.HTTP = new function() {
 	};
 	this.UnsupportedFormatError.prototype = Object.create(Error.prototype);
 	
-	this.maxResponseSize = config.has('maxResponseSize') ? config.get('maxResponseSize') : 50;
-
 	/**
 	 * Get a promise for a HTTP request
 	 *
@@ -96,7 +97,7 @@ Zotero.HTTP = new function() {
 			timeout: 15000,
 			responseType: '',
 			successCodes: null,
-			maxResponseSize: this.maxResponseSize * 1024 * 1024
+			maxResponseSize: this.httpMaxResponseSize
 		}, options);
 		
 		options.headers = Object.assign({
