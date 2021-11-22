@@ -99,6 +99,7 @@ Zotero.Promise = Zotero.requireTranslate('./promise');
 Zotero.Debug = Zotero.requireTranslate('./debug');
 Zotero.Translators = require('./translators');
 Zotero.Date = Zotero.requireUtilities('./date');
+Zotero.Date.init(Zotero.requireUtilities('./resource/dateFormats.json'))
 Zotero.OpenURL = Zotero.requireUtilities('./openurl');
 Zotero.Utilities = require('./utilities');
 Zotero.Translator = Zotero.requireTranslate('./translator');
