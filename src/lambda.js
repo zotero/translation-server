@@ -45,16 +45,13 @@ app.use(_.post('/export', ExportEndpoint.handle.bind(ExportEndpoint)));
 
 Debug.init(1);
 
+const handler = serverless(app);
 module.exports.handler = async function (event, context) {
 	if (!Translators) {
 		Translators = require('./translators');
 		await Translators.init();
 	}
 	
-	return await new Promise(function (resolve, reject) {
-		serverless(app)(event, context, function (err, res) {
-			if (err) return reject(err);
-			resolve(res);
-		});
-	})
+	var result = await handler(event, context);
+	return result;
 };
