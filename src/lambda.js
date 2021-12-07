@@ -35,6 +35,7 @@ var Translators; // Translators module is cashed
 const SearchEndpoint = require('./searchEndpoint');
 const WebEndpoint = require('./webEndpoint');
 const ExportEndpoint = require('./exportEndpoint');
+const ImportEndpoint = require('./importEndpoint');
 
 const app = module.exports = new Koa();
 app.use(cors);
@@ -42,6 +43,7 @@ app.use(bodyParser({enableTypes: ['text', 'json']}));
 app.use(_.post('/web', WebEndpoint.handle.bind(WebEndpoint)));
 app.use(_.post('/search', SearchEndpoint.handle.bind(SearchEndpoint)));
 app.use(_.post('/export', ExportEndpoint.handle.bind(ExportEndpoint)));
+app.use(_.post('/import', ImportEndpoint.handle.bind(ImportEndpoint)));
 
 Debug.init(1);
 
