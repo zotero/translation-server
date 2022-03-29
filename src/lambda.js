@@ -35,7 +35,6 @@ var Translators; // Translators module is cashed
 const SearchEndpoint = require('./searchEndpoint');
 const WebEndpoint = require('./webEndpoint');
 const ExportEndpoint = require('./exportEndpoint');
-const ImportEndpoint = require('./importEndpoint');
 
 const app = module.exports = new Koa();
 app.use(cors);
@@ -43,17 +42,19 @@ app.use(bodyParser({enableTypes: ['text', 'json']}));
 app.use(_.post('/web', WebEndpoint.handle.bind(WebEndpoint)));
 app.use(_.post('/search', SearchEndpoint.handle.bind(SearchEndpoint)));
 app.use(_.post('/export', ExportEndpoint.handle.bind(ExportEndpoint)));
-app.use(_.post('/import', ImportEndpoint.handle.bind(ImportEndpoint)));
 
 Debug.init(1);
 
-const handler = serverless(app);
 module.exports.handler = async function (event, context) {
 	if (!Translators) {
 		Translators = require('./translators');
 		await Translators.init();
 	}
 	
-	var result = await handler(event, context);
-	return result;
+	return await new Promise(function (resolve, reject) {
+		serverless(app)(event, context, function (err, res) {
+			if (err) return reject(err);
+			resolve(res);
+		});
+	})
 };

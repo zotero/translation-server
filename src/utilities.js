@@ -1,3 +1,4 @@
+
 /*
     ***** BEGIN LICENSE BLOCK *****
     
@@ -46,4 +47,3 @@ Zotero.Schema = Zotero.requireUtilities('./schema.js');
 Zotero.Schema.init(require('../modules/zotero-schema/schema.json'));
 
 module.exports = Zotero.Utilities;
-
