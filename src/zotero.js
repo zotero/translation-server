@@ -98,10 +98,10 @@ Zotero.requireUtilities = function(modulePath) {
 Zotero.Promise = Zotero.requireTranslate('./promise');
 Zotero.Debug = Zotero.requireTranslate('./debug');
 Zotero.Translators = require('./translators');
+Zotero.Utilities = require('./utilities');
 Zotero.Date = Zotero.requireUtilities('./date');
 Zotero.Date.init(Zotero.requireUtilities('./resource/dateFormats.json'))
 Zotero.OpenURL = Zotero.requireUtilities('./openurl');
-Zotero.Utilities = require('./utilities');
 Zotero.Translator = Zotero.requireTranslate('./translator');
 Zotero.Translate = require('./translation/translate');
 Zotero.Proxies = require('./proxy').Proxies;
