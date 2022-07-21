@@ -1,9 +1,9 @@
 ---
 version: v4
-base: docker-registry.wikimedia.org/buster-nodejs10-slim:0.0.1
+base: docker-registry.wikimedia.org/nodejs12-slim
 variants:
   build:
-    base: docker-registry.wikimedia.org/buster-nodejs10-devel:0.0.1
+    base: docker-registry.wikimedia.org/nodejs12-devel
     copies: [local]
     apt: { packages: [git] }
     node:
