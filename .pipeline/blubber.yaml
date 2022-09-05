@@ -1,9 +1,8 @@
 ---
 version: v4
-base: docker-registry.wikimedia.org/nodejs12-slim
+base: docker-registry.wikimedia.org/nodejs14-slim
 variants:
   build:
-    base: docker-registry.wikimedia.org/nodejs12-devel
     copies: [local]
     apt: { packages: [git] }
     node:
