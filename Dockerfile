@@ -1,4 +1,4 @@
-FROM node:10.7.0
+FROM node:lts
 
 # install npm dependencies
 WORKDIR /app
@@ -10,7 +10,7 @@ RUN npm install
 COPY . /app
 
 # Cloning zotero translators repository
-RUN git clone --depth=1 https://github.com/zotero/translators /app/modules/translators/
+RUN git clone --depth=1 https://github.com/zotero/translators.git /app/modules/translators/
 
 # run the application
 EXPOSE 1969
