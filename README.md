@@ -8,15 +8,15 @@ The Zotero translation server lets you use [Zotero translators](https://www.zote
 
 ### Running via Docker
 
-The easiest way to run a local instance of translation-server is via Docker
-(prebuilt images on [Docker Hub](https://registry.hub.docker.com/r/zotero/translation-server)).
+The easiest way to run a local instance of translation-server is via Docker.
 
 ```
 docker pull zotero/translation-server
 docker run --detach --publish 1969:1969 --rm --name translation-server zotero/translation-server
 ```
 
-This will pull the latest image from Docker Hub and run it as a background process on port 1969. Use `docker kill translation-server` to stop it.
+This will pull the latest image from [Docker Hub](https://registry.hub.docker.com/r/zotero/translation-server)
+and run it as a background process on port 1969. Use `docker kill translation-server` to stop it.
 
 ### Running from source
 
