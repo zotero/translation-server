@@ -13,10 +13,10 @@ The easiest way to run a local instance of translation-server is via Docker.
 
 ```
 docker pull zotero/translation-server
-docker run --detach --publish 1969:1969 --rm --name translation-server zotero/translation-server
+docker run -d -p 1969:1969 --rm --name translation-server zotero/translation-server
 ```
 
-This will pull the latest image from [Docker Hub](https://registry.hub.docker.com/r/zotero/translation-server)
+This will pull the latest image [from Docker Hub](https://registry.hub.docker.com/r/zotero/translation-server)
 and run it as a background process on port 1969. Use `docker kill translation-server` to stop it.
 
 ### Running from source
@@ -40,8 +40,8 @@ Once you've set up a local copy of the repo, you can run the server in various w
 Build from the local repo and run in foreground:
 
 ```
-docker build --tag translation-server .
-docker run --tty --interactive --publish 1969:1969 --rm translation-server
+docker build -t translation-server .
+docker run -ti -p 1969:1969 --rm translation-server
 ```
 
 #### AWS Lambda
