@@ -1,6 +1,7 @@
 # Zotero Translation Server
 
-[![Build Status](https://travis-ci.com/zotero/translation-server.svg?branch=master)](https://travis-ci.com/zotero/translation-server)
+[![Build Status](https://img.shields.io/github/workflow/status/zotero/translation-server/CI/master?label=actions&logo=github&style=for-the-badge)](https://github.com/zotero/translation-server/actions)
+
 
 The Zotero translation server lets you use [Zotero translators](https://www.zotero.org/support/translators) without the Zotero client.
 
@@ -15,7 +16,8 @@ docker pull zotero/translation-server
 docker run -d -p 1969:1969 --rm --name translation-server zotero/translation-server
 ```
 
-This will pull the latest image from Docker Hub and run it as a background process on port 1969. Use `docker kill translation-server` to stop it.
+This will pull the latest image [from Docker Hub](https://registry.hub.docker.com/r/zotero/translation-server)
+and run it as a background process on port 1969. Use `docker kill translation-server` to stop it.
 
 ### Running from source
 
