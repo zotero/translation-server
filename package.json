@@ -10,7 +10,7 @@
 	},
 	"dependencies": {
 		"aws-sdk": "^2.326.0",
-		"config": "^1.30.0",
+		"config": "^3.3.8",
 		"iconv-lite": "^0.4.24",
 		"jsdom": "^13.1.0",
 		"koa": "^2.13.4",
