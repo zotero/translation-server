@@ -464,8 +464,8 @@ WebSession.prototype.deproxifyURL = function (url) {
 WebSession.prototype.cleanDOIFromURL = function (url) {
 	let doi = Zotero.Utilities.cleanDOI(decodeURIComponent(url));
 	if (doi) {
-		// Stop at query string or ampersand
-		doi = doi.replace(/[?&].*/, '');
+		// Stop at query string, ampersand, or hash
+		doi = doi.replace(/[?&#].*/, '');
 	}
 	return doi || null;
 };
