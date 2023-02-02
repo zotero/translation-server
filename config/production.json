@@ -1,7 +1,7 @@
 {
 	"translators": {
-		"CrossrefREST.email": "noc@wikimedia.org" // Pass an email to Crossref REST API to utilize the faster servers pool
-		"httpMaxResponseSize": 10, // Max size of requested response to load; triggers 400 ResponseSize error when exceeded
+		"CrossrefREST.email": "noc@wikimedia.org", // Pass an email to Crossref REST API to utilize the faster servers pool
+		"httpMaxResponseSize": 10 // Max size of requested response to load; triggers 400 ResponseSize error when exceeded
 	},
 	"userAgent": "ZoteroTranslationServer/WMF (mailto:noc@wikimedia.org)"
 }
