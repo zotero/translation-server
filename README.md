@@ -1,6 +1,6 @@
 # Zotero Translation Server
 
-[![Build Status](https://img.shields.io/github/workflow/status/zotero/translation-server/CI/master?label=actions&logo=github&style=for-the-badge)](https://github.com/zotero/translation-server/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/zotero/translation-server/ci.yml?branch=master)](https://github.com/zotero/translation-server/actions)
 
 
 The Zotero translation server lets you use [Zotero translators](https://www.zotero.org/support/translators) without the Zotero client.
