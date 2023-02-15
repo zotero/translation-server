@@ -82,7 +82,7 @@ npm start
 
 ## Proxy Support
 
-You can configure `translation-server` to use a proxy server by setting the `HTTP_PROXY` and `HTTPS_PROXY` environment variables:
+You can configure translation-server to use a proxy server by setting the `HTTP_PROXY` and `HTTPS_PROXY` environment variables:
 
 `HTTP_PROXY=http://proxy.example.com:8080 HTTPS_PROXY=http://proxy.example.com:8080 npm start`
 
