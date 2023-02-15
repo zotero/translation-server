@@ -10,6 +10,6 @@
 	"translators": {
 		"CrossrefREST.email": "" // Pass an email to Crossref REST API to utilize the faster servers pool
 	},
-	"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:61.0) Gecko/20100101 Firefox/61.0",
+	"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
 	"translatorsDirectory": "./modules/translators"
 }
