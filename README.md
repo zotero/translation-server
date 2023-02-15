@@ -63,7 +63,22 @@ Deploy:
 ./lambda_deploy lambda_config.env
 ```
 
-You can view the API Gateway endpoint in the Outputs section of the CloudFormation stack in the AWS Console.
+You can view the API Gateway endpoint in the Outputs section of the console output.
+
+## User-Agent
+
+By default, translation-server uses a standard Chrome `User-Agent` string to maximize compatibility. This is fine for personal usage, but for a deployed service, it’s polite to customize `User-Agent` so that sites can identify requests and contact you in case of abuse.
+
+You can do this by setting the `USER_AGENT` environment variable:
+
+`USER_AGENT='my-custom-translation-server/2.0 (me@example.com)' npm start`
+
+If you find that regular requests are being blocked with a fully custom user-agent string, you can also add an identifier and contact information to the end of a standard browser UA string:
+
+```
+export USER_AGENT='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 my-custom-translation-server/2.0 (me@example.com)'
+npm start
+```
 
 ## Proxy Support
 

@@ -101,7 +101,7 @@ Zotero.HTTP = new function() {
 		}, options);
 		
 		options.headers = Object.assign({
-			'User-Agent': config.get('userAgent'),
+			'User-Agent': process.env.USER_AGENT || config.get('userAgent'),
 			'Accept': '*/*'
 		}, options.headers);
 	
