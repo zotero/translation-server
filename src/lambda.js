@@ -38,6 +38,14 @@ const ExportEndpoint = require('./exportEndpoint');
 const ImportEndpoint = require('./importEndpoint');
 
 const app = module.exports = new Koa();
+app.use(function (ctx, next) {
+	var msg = `${ctx.method} ${ctx.path} from ${ctx.request.ip} "${ctx.headers['user-agent']}"`;
+	if (ctx.headers.origin) {
+		msg += ` (${ctx.headers.origin})`;
+	}
+	Zotero.debug(msg);
+	return next();
+});
 app.use(cors);
 app.use(bodyParser({enableTypes: ['text', 'json']}));
 app.use(_.post('/web', WebEndpoint.handle.bind(WebEndpoint)));
