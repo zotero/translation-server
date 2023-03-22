@@ -50,7 +50,7 @@ if (config.get('trustProxyHeaders')) {
 	app.proxy = true;
 }
 app.use(function (ctx, next) {
-	var msg = `${ctx.method} ${ctx.path} from ${ctx.request.ip} "${ctx.headers['user-agent']}"`;
+	var msg = `${ctx.method} ${ctx.url} from ${ctx.request.ip} "${ctx.headers['user-agent']}"`;
 	if (ctx.headers.origin) {
 		msg += ` (${ctx.headers.origin})`;
 	}
