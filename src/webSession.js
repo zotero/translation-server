@@ -237,9 +237,11 @@ WebSession.prototype.translate = async function (translate, translators) {
 	}
 	
 	var translator;
+	var updatedTranslator;
 	var items;
 	while (translator = translators.shift()) {
-		translate.setTranslator(translator);
+		updatedTranslator = await Translators.updateTranslatorIfNeeded([translator.translatorID]);
+		translate.setTranslator(updatedTranslator);
 		try {
 			items = await translate.translate({
 				libraryID: false

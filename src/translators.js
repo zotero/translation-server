@@ -1,30 +1,30 @@
 /*
-    ***** BEGIN LICENSE BLOCK *****
+	***** BEGIN LICENSE BLOCK *****
     
-    Copyright © 2009 Center for History and New Media
-                     George Mason University, Fairfax, Virginia, USA
-                     http://zotero.org
+	Copyright © 2009 Center for History and New Media
+					 George Mason University, Fairfax, Virginia, USA
+					 http://zotero.org
     
-    This file is part of Zotero.
+	This file is part of Zotero.
     
-    Zotero is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	Zotero is free software: you can redistribute it and/or modify
+	it under the terms of the GNU Affero General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
     
-    Zotero is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
+	Zotero is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU Affero General Public License for more details.
     
-    You should have received a copy of the GNU Affero General Public License
-    along with Zotero.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU Affero General Public License
+	along with Zotero.  If not, see <http://www.gnu.org/licenses/>.
     
-    ***** END LICENSE BLOCK *****
+	***** END LICENSE BLOCK *****
 */
 
 // Enumeration of types of translators
-var TRANSLATOR_TYPES = {"import":1, "export":2, "web":4, "search":8};
+var TRANSLATOR_TYPES = { "import": 1, "export": 2, "web": 4, "search": 8 };
 
 const fs = require('fs');
 const path = require('path');
@@ -35,30 +35,30 @@ var Translators = Zotero.requireTranslate('./translators');
  * Singleton to handle loading and caching of translators
  * @namespace
  */
-Translators = Object.assign(Translators, new function() {
+Translators = Object.assign(Translators, new function () {
 	var _cache, _translators, _metadata;
 	var _initialized = false;
 	const infoRe = /^\s*{[\S\s]*?}\s*?[\r\n]/;
-	
+
 	/**
 	 * Initializes translator cache, loading all translators into memory
 	 * @param {Zotero.Translators[]} [translators] List of translators. If not specified, they will be
-     * retrieved from storage.
+	 * retrieved from storage.
 	 */
-	this.init = async function(translators) {
-		if(!translators) {
+	this.init = async function (translators) {
+		if (!translators) {
 			translators = await this.load();
 		}
-		
-		_cache = {"import":[], "export":[], "web":[], "search":[]};
+
+		_cache = { "import": [], "export": [], "web": [], "search": [] };
 		_translators = {};
 		_initialized = true;
-		
+
 		// Build caches
-		for(var i=0; i<translators.length; i++) {
+		for (var i = 0; i < translators.length; i++) {
 			this.cacheTranslator(translators[i]);
 		}
-		
+
 		// Sort by priority
 		var cmp = function (a, b) {
 			if (a.priority > b.priority) {
@@ -68,10 +68,10 @@ Translators = Object.assign(Translators, new function() {
 				return -1;
 			}
 		}
-		for(var type in _cache) {
+		for (var type in _cache) {
 			_cache[type].sort(cmp);
 		}
-	
+
 		// If the auto updates are enabled, fetch the metadata from repo.zotero.org
 		if (config.translatorsAutoUpdate) {
 			await this.fetchMetadata();
@@ -79,31 +79,31 @@ Translators = Object.assign(Translators, new function() {
 
 		Zotero.debug(`Translators initialized with ${translators.length} loaded`);
 	};
-	
-	this.load = async function() {
+
+	this.load = async function () {
 		var translatorsDirPath = path.resolve(path.resolve(__dirname, '..'), Zotero.Prefs.get("translatorsDirectory"));
-		
-		if(!await new Promise(resolve => fs.access(translatorsDirPath, (err) => resolve(!err)))) {
-			throw new Error("Translators directory "+translatorsDirPath+" is not "+
+
+		if (!await new Promise(resolve => fs.access(translatorsDirPath, (err) => resolve(!err)))) {
+			throw new Error("Translators directory " + translatorsDirPath + " is not " +
 				"accessible. Please set this correctly in config.js.\n")
 		}
 
-		var translatorFilePaths = await new Promise((resolve, reject) => 
+		var translatorFilePaths = await new Promise((resolve, reject) =>
 			fs.readdir(translatorsDirPath, (err, files) => err ? reject(err) : resolve(files)));
 		var translators = [];
-		for (let filePath of translatorFilePaths)  {
-			if (filePath[0] === '.' || filePath.substr(filePath.length-3) !== ".js") continue;
+		for (let filePath of translatorFilePaths) {
+			if (filePath[0] === '.' || filePath.substr(filePath.length - 3) !== ".js") continue;
 			filePath = path.resolve(translatorsDirPath, filePath);
-			var data = await new Promise((resolve, reject) => 
+			var data = await new Promise((resolve, reject) =>
 				fs.readFile(filePath, "utf8", (err, data) => err ? reject(err) : resolve(data)));
-			
+
 			const translator = this.loadTranslator(data);
-			
+
 			translators.push(translator);
 		}
 		return translators;
 	};
-	
+
 	/**
 	 * Gets the translator that corresponds to a given ID
 	 *
@@ -119,7 +119,7 @@ Translators = Object.assign(Translators, new function() {
 		}
 		return translator;
 	};
-	
+
 	/**
 	 * Gets all translators for a specific type of translation
 	 * @param {String} type The type of translators to get (import, export, web, or search)
@@ -128,10 +128,10 @@ Translators = Object.assign(Translators, new function() {
 	 *                              repo is re-retrieved from Zotero Standalone.
 	 */
 	this.getAllForType = async function (type, debugMode) {
-		if(!_initialized) Zotero.Translators.init()
+		if (!_initialized) Zotero.Translators.init()
 		var translators = _cache[type].slice(0);
 		var codeGetter = new Zotero.Translators.CodeGetter(translators, debugMode);
-		return codeGetter.getAll().then(function() {
+		return codeGetter.getAll().then(function () {
 			return translators;
 		});
 	};
@@ -143,7 +143,7 @@ Translators = Object.assign(Translators, new function() {
 			throw new Error(`Code for translator ${translator.translatorID} is missing`);
 		}
 	});
-	
+
 	/**
 	 * Gets web translators for a specific location
 	 * @param {String} uri The URI for which to look for translators
@@ -152,22 +152,17 @@ Translators = Object.assign(Translators, new function() {
 	 */
 	this.getWebTranslatorsForLocation = async function (URI, rootURI) {
 		var isFrame = URI !== rootURI;
-		if(!_initialized) Zotero.Translators.init();
+		if (!_initialized) Zotero.Translators.init();
 		var allTranslators = _cache["web"];
 		var potentialTranslators = [];
 		var proxies = [];
-		
+
 		var rootSearchURIs = Zotero.Proxies.getPotentialProxies(rootURI);
 		var frameSearchURIs = isFrame ? Zotero.Proxies.getPotentialProxies(URI) : rootSearchURIs;
 
-		Zotero.debug("Translators: Looking for translators for "+Object.keys(frameSearchURIs).join(', '));
+		Zotero.debug("Translators: Looking for translators for " + Object.keys(frameSearchURIs).join(', '));
 
-		// If metadata was fetched, check if it is time to re-fresh it
-		if (_metadata?.updateAt < new Date()){
-			await this.fetchMetadata();
-		}
-
-		for(var i=0; i<allTranslators.length; i++) {
+		for (var i = 0; i < allTranslators.length; i++) {
 			var translator = allTranslators[i];
 			// If we have this translator's metadata, use the target from the metadata
 			// instead of the one from inside of the translator itself
@@ -179,17 +174,12 @@ Translators = Object.assign(Translators, new function() {
 			if (isFrame && !translator.webRegexp.all) {
 				continue;
 			}
-			// If we have the _metadata object and it does not have the translatorID of the 
-			// current translator, assume the translator was deleted and skip it.
-			if (_metadata && !_metadata.data[translator.translatorID]){
-				continue;
-			}
 			rootURIsLoop:
-			for(var rootSearchURI in rootSearchURIs) {
+			for (var rootSearchURI in rootSearchURIs) {
 				var isGeneric = !regexTarget;
 				// don't attempt to use generic translators that can't be run in this browser
 				// since that would require transmitting every page to Zotero host
-				if(isGeneric && allTranslators[i].runMode !== Zotero.Translator.RUN_MODE_IN_BROWSER) {
+				if (isGeneric && allTranslators[i].runMode !== Zotero.Translator.RUN_MODE_IN_BROWSER) {
 					continue;
 				}
 
@@ -197,7 +187,7 @@ Translators = Object.assign(Translators, new function() {
 				if (translator.webRegexp.all && rootURIMatches) {
 					for (var frameSearchURI in frameSearchURIs) {
 						var frameURIMatches = frameSearchURI.length < 8192 && translator.webRegexp.all.test(frameSearchURI);
-							
+
 						if (frameURIMatches) {
 							potentialTranslators.push(translator);
 							proxies.push(frameSearchURIs[frameSearchURI]);
@@ -205,25 +195,10 @@ Translators = Object.assign(Translators, new function() {
 							break rootURIsLoop;
 						}
 					}
-				} else if(!isFrame && (isGeneric || rootURIMatches)) {
+				} else if (!isFrame && (isGeneric || rootURIMatches)) {
 					potentialTranslators.push(translator);
 					proxies.push(rootSearchURIs[rootSearchURI]);
 					break;
-				}
-			}
-		}
-
-		for (updateCandidate of potentialTranslators) {
-			// Check if potential translator's last updated date in metadata is after last updated date
-			// from our cache. If yes - fetch the code from the repo and update cache.
-			if(Zotero.Date.sqlToDate(updateCandidate.lastUpdated) < Zotero.Date.sqlToDate(_metadata?.data[updateCandidate.translatorID].lastUpdated) ) {
-				const repoCodeUrl = `${config.REPOSITORY_URL}/code/${updateCandidate.translatorID}?version=${Zotero.version}`;
-				try {
-					let codeRequest = await Zotero.HTTP.request("GET", repoCodeUrl);
-					updateCandidate.lastUpdated = Zotero.Date.dateToSQL(new Date());
-					updateCandidate.code = codeRequest.responseText;
-				} catch(e) {
-					Zotero.debug("Could not fetch translator's code for " + translator.translatorID);
 				}
 			}
 		}
@@ -235,21 +210,52 @@ Translators = Object.assign(Translators, new function() {
 	};
 
 	/**
+	 * @param {[String]} translatorIDS  - array of translatorIDS
+	 * Go through translators, check if lastUpdated time from the metadata is after
+	 * lastUpdated recorded inside of the translator. 
+	 * If yes, we fetch the code from
+	 * the repo, updates the cache, and returns updated translators.  
+	 * If some translators do not need updates, they are returned as is.
+	 */
+	this.updateTranslatorIfNeeded = async function (translatorIDS) {
+		const translators = [];
+		// Check if it is time to re-fresh metadata
+		if (_metadata?.updateAt < new Date()) {
+			await this.fetchMetadata();
+		}
+		for (translatorID of translatorIDS) {
+			const updateCandidate = _translators[translatorID];
+			if (Zotero.Date.sqlToDate(updateCandidate.lastUpdated) < Zotero.Date.sqlToDate(_metadata?.data[translatorID].lastUpdated)) {
+				const repoCodeUrl = `${config.REPOSITORY_URL}/code/${translatorID}?version=${Zotero.version}`;
+				try {
+					let codeRequest = await Zotero.HTTP.request("GET", repoCodeUrl);
+					updateCandidate.lastUpdated = Zotero.Date.dateToSQL(new Date());
+					updateCandidate.code = codeRequest.responseText;
+				} catch (e) {
+					Zotero.debug("Could not fetch translator's code for " + translator.translatorID);
+				}
+			}
+			translators.push(updateCandidate);
+		}
+		return translators;
+	}
+
+	/**
 	 * Converts translators to JSON-serializable objects
 	 */
-	this.serialize = function(translator, properties) {
+	this.serialize = function (translator, properties) {
 		// handle translator arrays
-		if(translator.length !== undefined) {
+		if (translator.length !== undefined) {
 			var newTranslators = new Array(translator.length);
-			for(var i in translator) {
+			for (var i in translator) {
 				newTranslators[i] = Zotero.Translators.serialize(translator[i], properties);
 			}
 			return newTranslators;
 		}
-		
+
 		// handle individual translator
 		var newTranslator = {};
-		for(var i in properties) {
+		for (var i in properties) {
 			var property = properties[i];
 			newTranslator[property] = translator[property];
 		}
@@ -261,7 +267,7 @@ Translators = Object.assign(Translators, new function() {
 	 * Adds _metadata.updateAt property which is the date object when metadata will
 	 * be re-fetched. 
 	 */
-	this.fetchMetadata = async function() {
+	this.fetchMetadata = async function () {
 		try {
 			// Fetch metadata from repo url
 			const repoMetadataUrl = `${config.REPOSITORY_URL}/metadata?version=${Zotero.version}`;
@@ -271,22 +277,22 @@ Translators = Object.assign(Translators, new function() {
 			const metadataObject = translatorsArray.reduce((accumulator, current) => {
 				accumulator[current.translatorID] = current;
 				return accumulator;
-			  }, {});
+			}, {});
 			// Calculate expiration date, then subtract a random number of minutes between 10 and 100
 			// for a random time when the metadata needs to be re-fetched. 
 			const expirationDate = new Date();
 			expirationDate.setHours(config.metadataValidForHours + expirationDate.getHours())
 			function getRandomNumber(min, max) {
 				return Math.floor(Math.random() * (max - min + 1)) + min;
-			  }
-			  expirationDate.setMinutes(expirationDate.getMinutes() - getRandomNumber(10, 100));
+			}
+			expirationDate.setMinutes(expirationDate.getMinutes() - getRandomNumber(10, 100));
 			_metadata = {
-				'data' : metadataObject, 
-				'updateAt' : expirationDate
+				'data': metadataObject,
+				'updateAt': expirationDate
 			};
 			Zotero.debug("Translators' metadata has been updated. Set to expire at " + expirationDate);
 			await this.handleNewTranslators();
-		} catch(e) {
+		} catch (e) {
 			Zotero.debug(`Could not fetch metadata from ${config.REPOSITORY_URL}`);
 			// If we tried to fetch data after initial time, it meants the metadata is about to expire.
 			// Wait for 5 minutes before trying to re-fetch when an error happens.
@@ -301,21 +307,21 @@ Translators = Object.assign(Translators, new function() {
 	 * If there are, it means that new translators have been added.
 	 * They are fetched from the repo and added to _cache and _translators
 	 */
-	this.handleNewTranslators = async function(){
-		for (let translatorID of Object.keys(_metadata?.data || {})){
+	this.handleNewTranslators = async function () {
+		for (let translatorID of Object.keys(_metadata?.data || {})) {
 			//If there is a translatorID in metadata but not in cache of translators
 			//a new translator has been added, and we need to load it.
-			if(!_translators[translatorID]){
+			if (!_translators[translatorID]) {
 				try {
 					const repoCodeUrl = `${config.REPOSITORY_URL}/code/${translatorID}?version=${Zotero.version}`;
 					const codeRequest = await Zotero.HTTP.request("GET", repoCodeUrl);
 					const translatorData = this.loadTranslator(codeRequest.responseText);
 					this.cacheTranslator(translatorData);
 					Zotero.debug("New translator has been added: " + translatorID);
-				} catch(e) {
+				} catch (e) {
 					Zotero.debug("Could not fetch translator's code for new translator: " + translatorID);
 				}
-				
+
 			}
 		}
 	}
@@ -324,9 +330,9 @@ Translators = Object.assign(Translators, new function() {
 	 * @param {Stirng} data - text data of a translator read from a local file or fetched from repo
 	 * @returns parsed and formatted as json representation of a translator
 	 */
-	this.loadTranslator = function(data) {
+	this.loadTranslator = function (data) {
 		// Strip off byte order mark, if one exists
-		if(data[0] === "\uFEFF") data = data.substr(1);
+		if (data[0] === "\uFEFF") data = data.substr(1);
 
 		// We assume lastUpdated is at the end to avoid running the regexp on more than necessary
 		var lastUpdatedIndex = data.indexOf('"lastUpdated"');
@@ -334,7 +340,7 @@ Translators = Object.assign(Translators, new function() {
 			Zotero.debug("Invalid or missing translator metadata JSON object in " + filename);
 			return;
 		}
-		
+
 		// Add 50 characters to clear lastUpdated timestamp and final "}"
 		var header = data.substr(0, lastUpdatedIndex + 50);
 		var m = infoRe.exec(header);
@@ -343,10 +349,10 @@ Translators = Object.assign(Translators, new function() {
 			return;
 		}
 		var metadataString = m[0];
-		
+
 		try {
 			var info = JSON.parse(metadataString);
-		} catch(e) {
+		} catch (e) {
 			Zotero.debug("Invalid or missing translator metadata JSON object in " + filename);
 			return;
 		}
@@ -358,21 +364,21 @@ Translators = Object.assign(Translators, new function() {
 	 * Takes translator object and caches it in globale _cache and _translators objects
 	 * @param {JSON} translatorData - JSON representation of a translator as returned by loadTranslator
 	 */
-	this.cacheTranslator = function(translatorData){
+	this.cacheTranslator = function (translatorData) {
 		try {
 			var translator = new Zotero.Translator(translatorData);
 			_translators[translator.translatorID] = translator;
-			
-			for(var type in TRANSLATOR_TYPES) {
-				if(translator.translatorType & TRANSLATOR_TYPES[type]) {
+
+			for (var type in TRANSLATOR_TYPES) {
+				if (translator.translatorType & TRANSLATOR_TYPES[type]) {
 					_cache[type].push(translator);
 				}
 			}
-		} catch(e) {
+		} catch (e) {
 			Zotero.logError(e);
 			try {
-				Zotero.logError("Could not load translator "+JSON.stringify(translatorData));
-			} catch(e) {}
+				Zotero.logError("Could not load translator " + JSON.stringify(translatorData));
+			} catch (e) { }
 		}
 	}
 });

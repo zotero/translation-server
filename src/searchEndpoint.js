@@ -26,6 +26,7 @@
 const config = require('config');
 const Translate = require('./translation/translate');
 const TextSearch = require('./textSearch');
+const Translators = require('./translators');
 
 var SearchEndpoint = module.exports = {
 	handle: async function (ctx, next) {
@@ -61,12 +62,13 @@ var SearchEndpoint = module.exports = {
 		try {
 			var translate = new Translate.Search();
 			translate.setIdentifier(identifier);
-			let translators = await translate.getTranslators();
+			var translators = await translate.getTranslators();
 			if (!translators.length) {
 				ctx.throw(501, "No translators available", { expose: true });
 			}
+			translators = await Translators.updateTranslatorIfNeeded(translators.map(tr => tr.translatorID));
 			translate.setTranslator(translators);
-			
+
 			var items = await translate.translate({
 				libraryID: false
 			});
