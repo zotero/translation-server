@@ -28,7 +28,7 @@ var TRANSLATOR_TYPES = {"import":1, "export":2, "web":4, "search":8};
 
 const fs = require('fs');
 const path = require('path');
-
+const config = require('config');
 var Translators = Zotero.requireTranslate('./translators');
 
 /**
@@ -36,7 +36,7 @@ var Translators = Zotero.requireTranslate('./translators');
  * @namespace
  */
 Translators = Object.assign(Translators, new function() {
-	var _cache, _translators;
+	var _cache, _translators, _metadata;
 	var _initialized = false;
 	const infoRe = /^\s*{[\S\s]*?}\s*?[\r\n]/;
 	
@@ -85,6 +85,12 @@ Translators = Object.assign(Translators, new function() {
 		for(var type in _cache) {
 			_cache[type].sort(cmp);
 		}
+	
+		// If the auto updates are enabled, fetch the metadata from repo.zotero.org
+		if (config.translatorsAutoUpdate) {
+			await this.fetchMetadata();
+		}
+
 		Zotero.debug(`Translators initialized with ${translators.length} loaded`);
 	};
 	
@@ -198,21 +204,34 @@ Translators = Object.assign(Translators, new function() {
 
 		Zotero.debug("Translators: Looking for translators for "+Object.keys(frameSearchURIs).join(', '));
 
+		// If metadata was fetched, check if it is time to re-fresh it
+		if (_metadata?.updateAt < new Date()){
+			await this.fetchMetadata();
+		}
+
 		for(var i=0; i<allTranslators.length; i++) {
 			var translator = allTranslators[i];
+			// If we have this translator's metadata, use the target from the metadata
+			// instead of the one from inside of the translator itself
+			// TODO: this does not check for new translators that were added into the metadata or ones that were removed
+			var regexTarget = translator.webRegexp.root;
+			if (_metadata?.data[translator.translatorID]) {
+				const metadataTarget = _metadata.data[translator.translatorID].target;
+				regexTarget = metadataTarget ? new RegExp(metadataTarget, "i") : null;
+			}
 			if (isFrame && !translator.webRegexp.all) {
 				continue;
 			}
 			rootURIsLoop:
 			for(var rootSearchURI in rootSearchURIs) {
-				var isGeneric = !allTranslators[i].webRegexp.root;
+				var isGeneric = !regexTarget;
 				// don't attempt to use generic translators that can't be run in this browser
 				// since that would require transmitting every page to Zotero host
 				if(isGeneric && allTranslators[i].runMode !== Zotero.Translator.RUN_MODE_IN_BROWSER) {
 					continue;
 				}
 
-				var rootURIMatches = isGeneric || rootSearchURI.length < 8192 && translator.webRegexp.root.test(rootSearchURI);
+				var rootURIMatches = isGeneric || rootSearchURI.length < 8192 && regexTarget.test(rootSearchURI);
 				if (translator.webRegexp.all && rootURIMatches) {
 					for (var frameSearchURI in frameSearchURIs) {
 						var frameURIMatches = frameSearchURI.length < 8192 && translator.webRegexp.all.test(frameSearchURI);
@@ -231,7 +250,22 @@ Translators = Object.assign(Translators, new function() {
 				}
 			}
 		}
-		
+
+		for (updateCandidate of potentialTranslators) {
+			// Check if potential translator's last updated date in metadata is after last updated date
+			// from our cache. If yes - fetch the code from the repo and update cache.
+			if(new Date(updateCandidate.lastUpdated) < new Date(_metadata?.data[updateCandidate.translatorID].lastUpdated) ) {
+				const repoCodeUrl = `${config.REPOSITORY_URL}/code/${updateCandidate.translatorID}?version=${Zotero.version}`;
+				try {
+					let codeRequest = await Zotero.HTTP.request("GET", repoCodeUrl);
+					updateCandidate.lastUpdated = new Date();
+					updateCandidate.code = codeRequest.responseText;
+				} catch(e) {
+					Zotero.debug("Could not fetch translator's code for " + translator.translatorID);
+				}
+			}
+		}
+
 		var codeGetter = new Zotero.Translators.CodeGetter(potentialTranslators);
 		return codeGetter.getAll().then(function () {
 			return [potentialTranslators, proxies];
@@ -258,6 +292,40 @@ Translators = Object.assign(Translators, new function() {
 			newTranslator[property] = translator[property];
 		}
 		return newTranslator;
+	}
+
+	this.fetchMetadata = async function() {
+		try {
+			// Fetch metadata from repo url
+			const repoMetadataUrl = `${config.REPOSITORY_URL}/metadata?version=${Zotero.version}`;
+			let xmlhttp = await Zotero.HTTP.request("GET", repoMetadataUrl);
+			const translatorsArray = JSON.parse(xmlhttp.responseText);
+			// Format the metadata as an object with 'translatorID' as the key for easier lookup
+			const metadataObject = translatorsArray.reduce((accumulator, current) => {
+				accumulator[current.translatorID] = current;
+				return accumulator;
+			  }, {});
+			// Calculate expiration date, then subtract a random number of minutes between 10 and 100
+			// for a random time when the metadata needs to be re-fetched. 
+			const expirationDate = new Date();
+			expirationDate.setHours(config.metadataValidForHours + expirationDate.getHours())
+			const someTimeBeforeExpirationDate = new Date();
+			function getRandomNumber(min, max) {
+				return Math.floor(Math.random() * (max - min + 1)) + min;
+			  }
+			someTimeBeforeExpirationDate.setMinutes(expirationDate.getMinutes() - getRandomNumber(10, 100));
+			_metadata = {
+				'data' : metadataObject, 
+				'updateAt' : someTimeBeforeExpirationDate
+			};
+		} catch(e) {
+			Zotero.debug(`Could not fetch metadata from ${config.REPOSITORY_URL}`);
+			// If we tried to fetch data after initial time, it meants the metadata is about to expire.
+			// Wait for 5 minutes before trying to re-fetch when an error happens.
+			if (_metadata.updateAt) {
+				_metadata.updateAt.setMinutes(_metadata.updateAt.getMinutes() + 5);
+			}
+		}
 	}
 });
 
