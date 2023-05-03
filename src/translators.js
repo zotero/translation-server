@@ -56,21 +56,7 @@ Translators = Object.assign(Translators, new function() {
 		
 		// Build caches
 		for(var i=0; i<translators.length; i++) {
-			try {
-				var translator = new Zotero.Translator(translators[i]);
-				_translators[translator.translatorID] = translator;
-				
-				for(var type in TRANSLATOR_TYPES) {
-					if(translator.translatorType & TRANSLATOR_TYPES[type]) {
-						_cache[type].push(translator);
-					}
-				}
-			} catch(e) {
-				Zotero.logError(e);
-				try {
-					Zotero.logError("Could not load translator "+JSON.stringify(translators[i]));
-				} catch(e) {}
-			}
+			this.cacheTranslator(translators[i]);
 		}
 		
 		// Sort by priority
@@ -111,37 +97,9 @@ Translators = Object.assign(Translators, new function() {
 			var data = await new Promise((resolve, reject) => 
 				fs.readFile(filePath, "utf8", (err, data) => err ? reject(err) : resolve(data)));
 			
-			// Strip off byte order mark, if one exists
-			if(data[0] === "\uFEFF") data = data.substr(1);
+			const translator = this.loadTranslator(data);
 			
-			// We assume lastUpdated is at the end to avoid running the regexp on more than necessary
-			var lastUpdatedIndex = data.indexOf('"lastUpdated"');
-			if (lastUpdatedIndex == -1) {
-				Zotero.debug("Invalid or missing translator metadata JSON object in " + filename);
-				continue;
-			}
-			
-			// Add 50 characters to clear lastUpdated timestamp and final "}"
-			var header = data.substr(0, lastUpdatedIndex + 50);
-			var m = infoRe.exec(header);
-			if (!m) {
-				Zotero.debug("Invalid or missing translator metadata JSON object in " + filename);
-				continue;
-			}
-			
-			var metadataString = m[0];
-			
-			try {
-				var info = JSON.parse(metadataString);
-			} catch(e) {
-				Zotero.debug("Invalid or missing translator metadata JSON object in " + filename);
-				continue;
-			}
-			info.code = data;
-			// We don't ever want to reload from disk again (and don't have the code to do that either)
-			info.cacheCode = true;
-			
-			translators.push(info);
+			translators.push(translator);
 		}
 		return translators;
 	};
@@ -213,13 +171,17 @@ Translators = Object.assign(Translators, new function() {
 			var translator = allTranslators[i];
 			// If we have this translator's metadata, use the target from the metadata
 			// instead of the one from inside of the translator itself
-			// TODO: this does not check for new translators that were added into the metadata or ones that were removed
 			var regexTarget = translator.webRegexp.root;
 			if (_metadata?.data[translator.translatorID]) {
 				const metadataTarget = _metadata.data[translator.translatorID].target;
 				regexTarget = metadataTarget ? new RegExp(metadataTarget, "i") : null;
 			}
 			if (isFrame && !translator.webRegexp.all) {
+				continue;
+			}
+			// If we have the _metadata object and it does not have the translatorID of the 
+			// current translator, assume the translator was deleted and skip it.
+			if (_metadata && !_metadata.data[translator.translatorID]){
 				continue;
 			}
 			rootURIsLoop:
@@ -254,11 +216,11 @@ Translators = Object.assign(Translators, new function() {
 		for (updateCandidate of potentialTranslators) {
 			// Check if potential translator's last updated date in metadata is after last updated date
 			// from our cache. If yes - fetch the code from the repo and update cache.
-			if(new Date(updateCandidate.lastUpdated) < new Date(_metadata?.data[updateCandidate.translatorID].lastUpdated) ) {
+			if(Zotero.Date.sqlToDate(updateCandidate.lastUpdated) < Zotero.Date.sqlToDate(_metadata?.data[updateCandidate.translatorID].lastUpdated) ) {
 				const repoCodeUrl = `${config.REPOSITORY_URL}/code/${updateCandidate.translatorID}?version=${Zotero.version}`;
 				try {
 					let codeRequest = await Zotero.HTTP.request("GET", repoCodeUrl);
-					updateCandidate.lastUpdated = new Date();
+					updateCandidate.lastUpdated = Zotero.Date.dateToSQL(new Date());
 					updateCandidate.code = codeRequest.responseText;
 				} catch(e) {
 					Zotero.debug("Could not fetch translator's code for " + translator.translatorID);
@@ -294,6 +256,11 @@ Translators = Object.assign(Translators, new function() {
 		return newTranslator;
 	}
 
+	/**
+	 * Fetches metadata from repo and saves it in _metadata.data cache object.
+	 * Adds _metadata.updateAt property which is the date object when metadata will
+	 * be re-fetched. 
+	 */
 	this.fetchMetadata = async function() {
 		try {
 			// Fetch metadata from repo url
@@ -309,22 +276,103 @@ Translators = Object.assign(Translators, new function() {
 			// for a random time when the metadata needs to be re-fetched. 
 			const expirationDate = new Date();
 			expirationDate.setHours(config.metadataValidForHours + expirationDate.getHours())
-			const someTimeBeforeExpirationDate = new Date();
 			function getRandomNumber(min, max) {
 				return Math.floor(Math.random() * (max - min + 1)) + min;
 			  }
-			someTimeBeforeExpirationDate.setMinutes(expirationDate.getMinutes() - getRandomNumber(10, 100));
+			  expirationDate.setMinutes(expirationDate.getMinutes() - getRandomNumber(10, 100));
 			_metadata = {
 				'data' : metadataObject, 
-				'updateAt' : someTimeBeforeExpirationDate
+				'updateAt' : expirationDate
 			};
+			Zotero.debug("Translators' metadata has been updated. Set to expire at " + expirationDate);
+			await this.handleNewTranslators();
 		} catch(e) {
 			Zotero.debug(`Could not fetch metadata from ${config.REPOSITORY_URL}`);
 			// If we tried to fetch data after initial time, it meants the metadata is about to expire.
 			// Wait for 5 minutes before trying to re-fetch when an error happens.
-			if (_metadata.updateAt) {
+			if (_metadata?.updateAt) {
 				_metadata.updateAt.setMinutes(_metadata.updateAt.getMinutes() + 5);
 			}
+		}
+	}
+
+	/**
+	 * Checks if there are translators in the metadata that are not in global cache
+	 * If there are, it means that new translators have been added.
+	 * They are fetched from the repo and added to _cache and _translators
+	 */
+	this.handleNewTranslators = async function(){
+		for (let translatorID of Object.keys(_metadata?.data || {})){
+			//If there is a translatorID in metadata but not in cache of translators
+			//a new translator has been added, and we need to load it.
+			if(!_translators[translatorID]){
+				try {
+					const repoCodeUrl = `${config.REPOSITORY_URL}/code/${translatorID}?version=${Zotero.version}`;
+					const codeRequest = await Zotero.HTTP.request("GET", repoCodeUrl);
+					const translatorData = this.loadTranslator(codeRequest.responseText);
+					this.cacheTranslator(translatorData);
+					Zotero.debug("New translator has been added: " + translatorID);
+				} catch(e) {
+					Zotero.debug("Could not fetch translator's code for new translator: " + translatorID);
+				}
+				
+			}
+		}
+	}
+	/**
+	 * Parses and formats text of a translator file into json
+	 * @param {Stirng} data - text data of a translator read from a local file or fetched from repo
+	 * @returns parsed and formatted as json representation of a translator
+	 */
+	this.loadTranslator = function(data) {
+		// Strip off byte order mark, if one exists
+		if(data[0] === "\uFEFF") data = data.substr(1);
+
+		// We assume lastUpdated is at the end to avoid running the regexp on more than necessary
+		var lastUpdatedIndex = data.indexOf('"lastUpdated"');
+		if (lastUpdatedIndex == -1) {
+			Zotero.debug("Invalid or missing translator metadata JSON object in " + filename);
+			return;
+		}
+		
+		// Add 50 characters to clear lastUpdated timestamp and final "}"
+		var header = data.substr(0, lastUpdatedIndex + 50);
+		var m = infoRe.exec(header);
+		if (!m) {
+			Zotero.debug("Invalid or missing translator metadata JSON object in " + filename);
+			return;
+		}
+		var metadataString = m[0];
+		
+		try {
+			var info = JSON.parse(metadataString);
+		} catch(e) {
+			Zotero.debug("Invalid or missing translator metadata JSON object in " + filename);
+			return;
+		}
+		info.code = data;
+		info.cacheCode = true;
+		return info;
+	}
+	/**
+	 * Takes translator object and caches it in globale _cache and _translators objects
+	 * @param {JSON} translatorData - JSON representation of a translator as returned by loadTranslator
+	 */
+	this.cacheTranslator = function(translatorData){
+		try {
+			var translator = new Zotero.Translator(translatorData);
+			_translators[translator.translatorID] = translator;
+			
+			for(var type in TRANSLATOR_TYPES) {
+				if(translator.translatorType & TRANSLATOR_TYPES[type]) {
+					_cache[type].push(translator);
+				}
+			}
+		} catch(e) {
+			Zotero.logError(e);
+			try {
+				Zotero.logError("Could not load translator "+JSON.stringify(translatorData));
+			} catch(e) {}
 		}
 	}
 });

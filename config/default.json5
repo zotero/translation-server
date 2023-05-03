@@ -15,5 +15,5 @@
 	"translatorsDirectory": "./modules/translators",
 	"translatorsAutoUpdate" : true,
 	"REPOSITORY_URL" : "https://repo.zotero.org/repo",
-	"metadataValidForHours" : 1
+	"metadataValidForHours" : 24
 }
