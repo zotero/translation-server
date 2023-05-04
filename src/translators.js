@@ -210,7 +210,7 @@ Translators = Object.assign(Translators, new function () {
 	};
 
 	/**
-	 * @param {[String]} translatorIDS  - array of translatorIDS
+	 * @param {[String]|String} translatorIDS  - array of translatorIDS or a single transactionID
 	 * Go through translators, check if lastUpdated time from the metadata is after
 	 * lastUpdated recorded inside of the translator. 
 	 * If yes, we fetch the code from
@@ -219,6 +219,10 @@ Translators = Object.assign(Translators, new function () {
 	 */
 	this.updateTranslatorIfNeeded = async function (translatorIDS) {
 		const translators = [];
+
+		if (!Array.isArray(translatorIDS)){
+			translatorIDS = [translatorIDS];
+		}
 		// Check if it is time to re-fresh metadata
 		if (_metadata?.updateAt < new Date()) {
 			await this.fetchMetadata();
@@ -232,12 +236,12 @@ Translators = Object.assign(Translators, new function () {
 					updateCandidate.lastUpdated = Zotero.Date.dateToSQL(new Date());
 					updateCandidate.code = codeRequest.responseText;
 				} catch (e) {
-					Zotero.debug("Could not fetch translator's code for " + translator.translatorID);
+					Zotero.debug("Could not fetch translator's code for " + translatorID);
 				}
 			}
 			translators.push(updateCandidate);
 		}
-		return translators;
+		return translators.length == 1 ? translators[0] : translators;
 	}
 
 	/**

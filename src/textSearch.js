@@ -171,7 +171,7 @@ async function search(query, start) {
 				}
 				continue;
 			}
-			updatedTranslators = await Translators.updateTranslatorIfNeeded(translators.map(tr => tr.translatorID));
+			updatedTranslators = await Zotero.Translators.updateTranslatorIfNeeded(translators.map(tr => tr.translatorID));
 			translate.setTranslator(updatedTranslators);
 			
 			let newItems = await translate.translate({
@@ -296,7 +296,7 @@ async function queryCrossref(query) {
 	try {
 		let translate = new Zotero.Translate.Search();
 		// Crossref REST
-		updatedTranslator = await Translators.updateTranslatorIfNeeded(["0a61e167-de9a-4f93-a68a-628b48855909"]);
+		updatedTranslator = await Zotero.Translators.updateTranslatorIfNeeded("0a61e167-de9a-4f93-a68a-628b48855909");
 		translate.setTranslator(updatedTranslator);
 		translate.setSearch({query});
 		items = await translate.translate({libraryID: false});
@@ -315,7 +315,7 @@ async function queryLibraries(query) {
 	try {
 		let translate = new Zotero.Translate.Search();
 		// Library of Congress ISBN
-		updatedTranslator = await Translators.updateTranslatorIfNeeded(["c070e5a2-4bfd-44bb-9b3c-4be20c50d0d9"]);
+		updatedTranslator = await Zotero.Translators.updateTranslatorIfNeeded("c070e5a2-4bfd-44bb-9b3c-4be20c50d0d9");
 		translate.setTranslator(updatedTranslator);
 		translate.setSearch({query});
 		items = await translate.translate({libraryID: false});
@@ -325,7 +325,7 @@ async function queryLibraries(query) {
 		try {
 			let translate = new Zotero.Translate.Search();
 			// Gemeinsamer Bibliotheksverbund ISBN
-			updatedTranslator = await Translators.updateTranslatorIfNeeded(["de0eef58-cb39-4410-ada0-6b39f43383f9"]);
+			updatedTranslator = await Zotero.Translators.updateTranslatorIfNeeded("de0eef58-cb39-4410-ada0-6b39f43383f9");
 			translate.setTranslator(updatedTranslator);
 			translate.setSearch({query});
 			items = await translate.translate({libraryID: false});

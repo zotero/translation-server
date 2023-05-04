@@ -240,7 +240,7 @@ WebSession.prototype.translate = async function (translate, translators) {
 	var updatedTranslator;
 	var items;
 	while (translator = translators.shift()) {
-		updatedTranslator = await Translators.updateTranslatorIfNeeded([translator.translatorID]);
+		updatedTranslator = await Zotero.Translators.updateTranslatorIfNeeded(translator.translatorID);
 		translate.setTranslator(updatedTranslator);
 		try {
 			items = await translate.translate({

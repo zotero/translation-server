@@ -37,7 +37,7 @@ module.exports = {
 			ctx.throw(500, 'No suitable translators found', { expose: true });
 			return;
 		}
-		const updatedTranslator = await Translators.updateTranslatorIfNeeded(translators[0].translatorID);
+		const updatedTranslator = await Zotero.Translators.updateTranslatorIfNeeded(translators[0].translatorID);
 		translate.setTranslator(updatedTranslator);
 		var items = await translate.translate({ libraryID: 1 });
 		
