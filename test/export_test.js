@@ -91,6 +91,19 @@ describe("/export", function () {
 		assert.equal(response.body[0].note, `original-date: ${date}`);
 	});
 	
+	it("should export computer program as CSL JSON", async function () {
+		var date = "2017-06-29T15:02:20Z";
+		var json = [{
+			itemType: "computerProgram"
+		}];
+		var response = await request()
+			.post('/export?format=csljson')
+			.send(json)
+			.expect(200)
+			.expect('Content-Type', 'application/json');
+		assert.equal(response.body[0].type, 'software');
+	});
+	
 	it("should export note as CSL JSON", async function () {
 		var json = [
 			{
@@ -103,7 +116,7 @@ describe("/export", function () {
 			.send(json)
 			.expect(200)
 			.expect('Content-Type', 'application/json');
-		assert.equal(response.body[0].type, 'article');
+		assert.equal(response.body[0].type, 'document');
 		assert.equal(response.body[0].title, 'Note');
 	});
 	

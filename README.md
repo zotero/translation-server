@@ -1,6 +1,7 @@
 # Zotero Translation Server
 
-[![Build Status](https://travis-ci.com/zotero/translation-server.svg?branch=master)](https://travis-ci.com/zotero/translation-server)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/zotero/translation-server/ci.yml?branch=master)](https://github.com/zotero/translation-server/actions)
+
 
 The Zotero translation server lets you use [Zotero translators](https://www.zotero.org/support/translators) without the Zotero client.
 
@@ -15,7 +16,8 @@ docker pull zotero/translation-server
 docker run -d -p 1969:1969 --rm --name translation-server zotero/translation-server
 ```
 
-This will pull the latest image from Docker Hub and run it as a background process on port 1969. Use `docker kill translation-server` to stop it.
+This will pull the latest image [from Docker Hub](https://registry.hub.docker.com/r/zotero/translation-server)
+and run it as a background process on port 1969. Use `docker kill translation-server` to stop it.
 
 ### Running from source
 
@@ -61,11 +63,26 @@ Deploy:
 ./lambda_deploy lambda_config.env
 ```
 
-You can view the API Gateway endpoint in the Outputs section of the CloudFormation stack in the AWS Console.
+You can view the API Gateway endpoint in the Outputs section of the console output.
+
+## User-Agent
+
+By default, translation-server uses a standard Chrome `User-Agent` string to maximize compatibility. This is fine for personal usage, but for a deployed service, it’s polite to customize `User-Agent` so that sites can identify requests and contact you in case of abuse.
+
+You can do this by setting the `USER_AGENT` environment variable:
+
+`USER_AGENT='my-custom-translation-server/2.0 (me@example.com)' npm start`
+
+If you find that regular requests are being blocked with a fully custom user-agent string, you can also add an identifier and contact information to the end of a standard browser UA string:
+
+```
+export USER_AGENT='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 my-custom-translation-server/2.0 (me@example.com)'
+npm start
+```
 
 ## Proxy Support
 
-You can configure `translation-server` to use a proxy server by setting the `HTTP_PROXY` and `HTTPS_PROXY` environment variables:
+You can configure translation-server to use a proxy server by setting the `HTTP_PROXY` and `HTTPS_PROXY` environment variables:
 
 `HTTP_PROXY=http://proxy.example.com:8080 HTTPS_PROXY=http://proxy.example.com:8080 npm start`
 

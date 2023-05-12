@@ -81,9 +81,10 @@ Zotero.HTTP = new function() {
 	 *              otherwise unspecified content types are rejected.</li>
 	 *         <li>successCodes - HTTP status codes that are considered successful, or FALSE to allow all</li>
 	 *     </ul>
-	 * @return {Promise<Object>} A promise resolved with a response object containing:
+	 * @return {Promise<Object>} A promise resolved with an object containing the following XMLHttpRequest properties:
 	 * 		- responseText {String}
-	 * 		- headers {Object}
+	 * 		- getAllResponseHeaders {Function}
+	 * 		- getResponseHeader {Function}
 	 * 		- statusCode {Number}
 	 */
 	this.request = async function(method, requestURL, options = {}) {
@@ -101,7 +102,7 @@ Zotero.HTTP = new function() {
 		}, options);
 		
 		options.headers = Object.assign({
-			'User-Agent': config.get('userAgent'),
+			'User-Agent': process.env.USER_AGENT || config.get('userAgent'),
 			'Accept': '*/*'
 		}, options.headers);
 	
@@ -142,8 +143,13 @@ Zotero.HTTP = new function() {
 		
 		var result = {
 			responseURL: response.request.uri.href,
-			headers: response.headers,
-			status: response.statusCode
+			status: response.statusCode,
+			getAllResponseHeaders: () => {
+				return [...Object.entries(response.headers)].map(([k, v]) => `${k}: ${v}\r\n`).join('');
+			},
+			getResponseHeader: (header) => {
+				return response.headers[header.toLowerCase()] || null;
+			}
 		};
 		
 		var mimeType = new MIMEType(response.headers['content-type']);

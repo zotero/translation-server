@@ -1,0 +1,20 @@
+#!/bin/bash -e
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+if [ -z $1 ]; then
+	echo "Usage: $0 config.env" >&2
+	exit 1
+fi
+
+set -a
+. "$dir/$1"
+set +a
+
+./lambda_package
+
+j2 "$dir/lambda_template.yaml.j2" > "$dir/package/template.yaml"
+
+sam package --template-file "$dir/package/template.yaml" --s3-bucket $deployment_bucket_name --output-template-file "$dir/package/package.yaml"
+aws cloudformation deploy --template-file "$dir/package/package.yaml" --stack-name $stack_name --capabilities CAPABILITY_IAM
+aws cloudformation describe-stacks --stack-name $stack_name
+rm -rf "$dir/package"
