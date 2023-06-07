@@ -12,7 +12,7 @@
 		"aws-sdk": "^2.326.0",
 		"config": "^1.30.0",
 		"iconv-lite": "^0.4.24",
-		"jsdom": "^13.1.0",
+		"jsdom": "^22.1.0",
 		"koa": "^2.13.4",
 		"koa-bodyparser": "^4.3.0",
 		"koa-route": "^3.2.0",
@@ -20,6 +20,7 @@
 		"request": "^2.87.0",
 		"request-promise-native": "^1.0.5",
 		"serverless-http": "^2.7.0",
+		"w3c-xmlserializer": "^4.0.0",
 		"wicked-good-xpath": "git+https://git@github.com/zotero/wicked-good-xpath.git#1b88459",
 		"xregexp": "^4.2.0",
 		"yargs": "^12.0.2"

@@ -41,27 +41,14 @@ var { JSDOM } = require('jsdom');
 var dom = new JSDOM('<html></html>');
 wgxpath.install(dom.window, true);
 global.DOMParser = dom.window.DOMParser;
-global.XMLSerializer = require("w3c-xmlserializer/lib/XMLSerializer").interface;
 
-// Shimming innerText property for JSDOM attributes, see https://github.com/jsdom/jsdom/issues/1245
-var Attr = require('jsdom/lib/jsdom/living/generated/Attr');
-Object.defineProperty(Attr.interface.prototype, 'innerText', {
-	get: function() { return this.textContent },
-	set: function(value) { this.textContent = value },
-	configurable: true,
-});
-var Node = require('jsdom/lib/jsdom/living/generated/Node');
-Object.defineProperty(Node.interface.prototype, 'innerText', {
-	get: function() {
-		// innerText in the browser is more sophisticated, but this removes most unwanted content
-		// https://github.com/jsdom/jsdom/issues/1245#issuecomment-584677454
-		var el = this.cloneNode(true);
-		el.querySelectorAll('script,style').forEach(s => s.remove())
-		return el.textContent
-	},
-	set: function(value) { this.textContent = value },
-	configurable: true,
-});
+const serialize = require("w3c-xmlserializer");
 
+class SerializerWrapper {
+	serializeToString(obj) {
+		return serialize(obj);
+	}
+}
+global.XMLSerializer = SerializerWrapper;
 
 module.exports = Zotero.Translate;

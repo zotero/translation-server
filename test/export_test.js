@@ -129,8 +129,12 @@ describe("/export", function () {
 		var dp = new DOMParser();
 		var doc = dp.parseFromString(response.text, 'text/xml');
 		assert.equal(doc.documentElement.localName, 'RDF');
+		let node = doc;
+		for (let tagName of ['bibo\\:Issue', 'dcterms\\:isPartOf', 'bibo\\:Newspaper', 'dcterms\\:title']) {
+			node = node.querySelector(tagName);
+		}
 		assert.equal(
-			doc.querySelector('bibo\\:Issue dcterms\\:isPartOf bibo\\:Newspaper dcterms\\:title').textContent,
+			node.textContent,
 			'The New York Times'
 		);
 	});
@@ -144,7 +148,11 @@ describe("/export", function () {
 		var dp = new DOMParser();
 		var doc = dp.parseFromString(response.text, 'text/xml');
 		assert.equal(doc.documentElement.localName, 'RDF');
-		assert.equal(doc.querySelector('bibo\\:Webpage dcterms\\:title').textContent, 'Example');
+		let node = doc;
+		for (let tagName of ['bibo\\:Webpage', 'dcterms\\:title']) {
+			node = node.querySelector(tagName);
+		}
+		assert.equal(node.textContent, 'Example');
 	});
 	
 	it("should export to RefWorks Tagged", async function () {
