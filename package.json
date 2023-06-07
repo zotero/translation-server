@@ -9,21 +9,21 @@
 		"url": "git+https://github.com/zotero/translation-server-v2"
 	},
 	"dependencies": {
-		"aws-sdk": "^2.326.0",
-		"config": "^1.30.0",
-		"iconv-lite": "^0.4.24",
+		"aws-sdk": "^2.1392.0",
+		"config": "^3.3.9",
+		"iconv-lite": "^0.6.3",
 		"jsdom": "^22.1.0",
-		"koa": "^2.13.4",
-		"koa-bodyparser": "^4.3.0",
+		"koa": "^2.14.2",
+		"koa-bodyparser": "^4.4.0",
 		"koa-route": "^3.2.0",
-		"md5": "^2.2.1",
-		"request": "^2.87.0",
-		"request-promise-native": "^1.0.5",
-		"serverless-http": "^2.7.0",
+		"md5": "^2.3.0",
+		"request": "^2.88.0",
+		"request-promise-native": "^1.0.9",
+		"serverless-http": "^3.2.0",
 		"w3c-xmlserializer": "^4.0.0",
 		"wicked-good-xpath": "git+https://git@github.com/zotero/wicked-good-xpath.git#1b88459",
-		"xregexp": "^4.2.0",
-		"yargs": "^12.0.2"
+		"xregexp": "^5.1.1",
+		"yargs": "^17.7.2"
 	},
 	"devDependencies": {
 		"@zotero/eslint-config": "^1.0.2",
