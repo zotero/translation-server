@@ -67,7 +67,7 @@ You can view the API Gateway endpoint in the Outputs section of the console outp
 
 ## User-Agent
 
-By default, translation-server uses a standard Chrome `User-Agent` string to maximize compatibility. This is fine for personal usage, but for a deployed service, it’s polite to customize `User-Agent` so that sites can identify requests and contact you in case of abuse.
+By default, translation-server uses a standard Chrome `User-Agent` string to maximize compatibility, plus a `ZoteroTranslationServer/WMF` signifier. This is fine for personal usage, but for a deployed service, it’s polite to customize `User-Agent` so that sites can identify requests and contact you in case of abuse.
 
 You can do this by setting the `USER_AGENT` environment variable:
 
