@@ -58,7 +58,13 @@ app.use(function (ctx, next) {
 	return next();
 });
 app.use(cors);
-app.use(bodyParser({ enableTypes: ['text', 'json'], jsonLimit: '5mb' }));
+app.use(
+	bodyParser({
+		enableTypes: ['text', 'json'],
+		jsonLimit: '5mb',
+		textLimit: '5mb',
+	})
+);
 app.use(_.post('/web', WebEndpoint.handle.bind(WebEndpoint)));
 app.use(_.post('/search', SearchEndpoint.handle.bind(SearchEndpoint)));
 app.use(_.post('/export', ExportEndpoint.handle.bind(ExportEndpoint)));
