@@ -51,7 +51,7 @@ app.use(
 	bodyParser({
 		enableTypes: ['text', 'json'],
 		jsonLimit: '5mb',
-		textLimit: '5mb',
+		textLimit: '3mb',
 	})
 );
 app.use(_.post('/web', WebEndpoint.handle.bind(WebEndpoint)));
