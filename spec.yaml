@@ -1,0 +1,142 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Zotero translation-server
+  description: The Zotero translation server lets you use Zotero translators without the Zotero client.
+  license:
+    name: AGPL-3.0-only
+    url: https://spdx.org/licenses/AGPL-3.0-only.html
+paths:
+  /web:
+    post:
+      tags:
+        - Web
+      description: Retrieve metadata for a webpage
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+            example: http://www.example.com
+      produces:
+        - application/json; charset=utf-8;
+      responses:
+        '200':
+          description: Returns an array of translated items in Zotero API JSON format
+          schema:
+            type: Array
+        '300':
+          description: Multiple items found
+          schema:
+            type: Object
+            properties:
+              url:
+                type: string
+              session:
+                type: string
+              items:
+                type: Object
+        '400':
+          description: Remote page not found
+          schema:
+            type: string
+  /search:
+    post:
+      tags:
+        - Search
+      description: Retrieve metadata from an identifier (DOI, ISBN, PMID, arXiv ID)
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+            encoding:
+              allowReserved: true
+      produces:
+        - application/json; charset=utf-8;
+      responses:
+        '200':
+          description: The citation data in the requested format
+          schema:
+            type: Array
+        '501':
+          description: Metadata for identifier was not found
+          schema:
+            type: string
+  /export:
+    post:
+      tags:
+        - Export
+      description: Convert items in Zotero API JSON format to a supported export format (RIS, BibTeX, etc.)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+      parameters:
+        - name: format
+          in: query
+          description: Requested format to covert body to
+          schema:
+            type: string
+            enum:
+              - bibtex
+              - biblatex
+              - bookmarks
+              - coins
+              - csljson
+              - csv
+              - endnote_xml
+              - evernote
+              - mods
+              - rdf_bibliontology
+              - rdf_dc
+              - rdf_zotero
+              - refer
+              - refworks_tagged
+              - ris
+              - tei
+              - wikipedia
+          required: true
+      produces:
+        - application/json; charset=utf-8;
+      responses:
+        '200':
+          description: The citation data in the requested format
+        '415':
+          description: Unsupported media type
+          schema:
+            type: string
+        '501':
+          description: Failed to translate
+          schema:
+            type: string
+  /import:
+    post:
+      tags:
+        - Import
+      description: Convert items in any import format to the Zotero API JSON format
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      produces:
+        - application/json; charset=utf-8;
+      responses:
+        '200':
+          description: The citation data in the requested format
+          schema:
+            type: array
+        '415':
+          description: Unsupported media type
+          schema:
+            type: string
+        '500':
+          description: No suitable translators found
+          schema:
+            type: string
