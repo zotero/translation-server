@@ -34,7 +34,7 @@ describe("/search", function () {
 			}
 			
 			// Mock Library of Congress ISBN lookup
-			if (url.startsWith('http://lx2.loc.gov')) {
+			if (url.startsWith('https://lx2.loc.gov')) {
 				var xml = fs.readFileSync(
 					path.join(__dirname, 'data', 'loc_book1_response.xml'),
 					{
@@ -68,7 +68,7 @@ describe("/search", function () {
 		var origQueryLambda = TextSearch.queryLambda.bind(TextSearch);
 		sinon.stub(TextSearch, 'queryLambda').callsFake(function (query) {
 			if (query == bookTitle1.toLowerCase()) {
-				return Promise.resolve([{"ISBN":"${bookISBN1}"}]);
+				return Promise.resolve([{"ISBN":bookISBN1}]);
 			}
 			return origQueryLambda(query);
 		});
