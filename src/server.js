@@ -59,13 +59,18 @@ app.use(function (ctx, next) {
 	return next();
 });
 app.use(cors);
-app.use(bodyParser({ enableTypes: ['text', 'json']}));
+app.use(
+	bodyParser({
+		enableTypes: ['text', 'json'],
+		jsonLimit: '5mb',
+		textLimit: '5mb',
+	})
+);
 app.use(_.post('/web', WebEndpoint.handle.bind(WebEndpoint)));
 app.use(_.post('/search', SearchEndpoint.handle.bind(SearchEndpoint)));
 app.use(_.post('/export', ExportEndpoint.handle.bind(ExportEndpoint)));
 app.use(_.post('/import', ImportEndpoint.handle.bind(ImportEndpoint)));
 app.use(_.get('/', SpecEndpoint.handle.bind(SpecEndpoint)));
-
 
 Debug.init(process.env.DEBUG_LEVEL ? parseInt(process.env.DEBUG_LEVEL) : 1);
 Translators.init()
