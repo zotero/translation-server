@@ -1,13 +1,13 @@
 ---
 version: v4
-base: docker-registry.wikimedia.org/nodejs18-slim
+base: docker-registry.wikimedia.org/nodejs16-slim
 variants:
   build:
-    base: docker-registry.wikimedia.org/nodejs18-devel
     copies: [local]
-    apt: { packages: [git, build-essential, npm] }
-    node: { requirements: [package.json, package-lock.json] }
-    runs: { environment: { LINK: g++ } }
+    apt: { packages: [git] }
+    node:
+      requirements: [package.json, package-lock.json]
+
   test:
     includes: [build]
     runs:
