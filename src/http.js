@@ -164,7 +164,17 @@ Zotero.HTTP = new function() {
 				// so it could reject unsupported content types
 				contentType: response.headers['content-type']
 			});
-			
+			// Shimming innerText property for JSDOM attributes, see https://github.com/jsdom/jsdom/issues/1245
+			Object.defineProperty(dom.window.Element.prototype, 'innerText', {
+				get: function () {
+					var el = this.cloneNode(true);
+					el.querySelectorAll('script,style').forEach(s => s.remove());
+					return el.textContent;
+				},
+				set: function (value) {
+					this.textContent = value;
+				},
+			});
 			wgxpath.install(dom.window, true);
 			result.response = dom.window.document;
 			
