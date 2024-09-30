@@ -37,5 +37,8 @@
 		"start:debug": "node --inspect src/server.js",
 		"test": "NODE_ENV=test ALLOW_CONFIG_MUTATIONS=1 node_modules/.bin/mocha test/*_test.js",
 		"test:import": "DEBUG_LEVEL=0 NODE_ENV=test ALLOW_CONFIG_MUTATIONS=1 node_modules/.bin/mocha test/import_test.js"
+	},
+	"bin": {
+		"zotero-translation-server": "./src/server.js"
 	}
 }
