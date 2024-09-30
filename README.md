@@ -19,6 +19,13 @@ docker run -d -p 1969:1969 --rm --name translation-server zotero/translation-ser
 This will pull the latest image [from Docker Hub](https://registry.hub.docker.com/r/zotero/translation-server)
 and run it as a background process on port 1969. Use `docker kill translation-server` to stop it.
 
+### Running via Nix
+
+```
+nix run github:zotero/translation-server
+```
+Now the server will run as a foreground process on port 1969.
+
 ### Running from source
 
 First, fetch the source code and install Node dependencies:

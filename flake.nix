@@ -68,7 +68,6 @@
         };
         apps.default = flake-utils.lib.mkApp {
           drv = self.packages.${system}.default;
-          checkPhase = "true";
           name = "zotero-translation-server";
         };
       }
