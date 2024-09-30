@@ -46,13 +46,16 @@
           src = ./.;
           npmDepsHash = "sha256-JHoBxUybs1GGRxEVG5GgX2mOCplTgR5dcPjnR42SEbY=";
           makeCacheWritable = true;
+	  dontNpmBuild = true;
          
-          buildPhase = ''
-            cp -r ${translate} modules/translate
-            cp -r ${translators} modules/translators
-            cp -r ${utilities} modules/utilities
-            cp -r ${zotero-schema} modules/zotero-schema
-          '';
+	  postInstall = ''
+	    modules="$out/lib/node_modules/translation-server/modules"
+	    mkdir "$modules"
+            ln -s ${translate} $modules/translate
+            ln -s ${translators} $modules/translators
+            ln -s ${utilities} $modules/utilities
+            ln -s ${zotero-schema} $modules/zotero-schema
+	  '';
          
           packageJson = "${src}/package.json";
          
