@@ -286,7 +286,6 @@ Zotero.HTTP = new function() {
 		this.request('GET', url, {responseCharset, headers, cookieSandbox})
 		.then(onDone, function(e) {
 			onDone({status: e.status, responseText: e.responseText});
-			throw (e);
 		});
 		return true;
 	};
@@ -308,7 +307,6 @@ Zotero.HTTP = new function() {
 		this.request('POST', url, {body, responseCharset, headers, cookieSandbox})
 		.then(onDone, function(e) {
 			onDone({status: e.status, responseText: e.responseText});
-			throw (e);
 		});
 		return true;
 	};
