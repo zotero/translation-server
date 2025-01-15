@@ -216,6 +216,11 @@ WebSession.prototype.handleURL = async function () {
 			
 			// No more URLs to try
 			if (i == urlsToTry.length - 1) {
+				if (e instanceof Zotero.HTTP.StatusError && e.status >= 400 && e.status < 500) {
+					this.ctx.throw(503, `Remote server could not provide document (${e.status})`);
+				} else if (e instanceof Zotero.HTTP.StatusError && e.status >= 500) {
+					this.ctx.throw(503, `Remote server encountered an error handling our request (${e.status})`);
+				}
 				this.ctx.throw(500, "An error occurred retrieving the document");
 			}
 		}
