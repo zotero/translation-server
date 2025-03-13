@@ -44,6 +44,7 @@ const SearchEndpoint = require('./searchEndpoint');
 const WebEndpoint = require('./webEndpoint');
 const ExportEndpoint = require('./exportEndpoint');
 const ImportEndpoint = require('./importEndpoint');
+const SpecEndpoint = require('./specEndpoint');
 
 const app = module.exports = new Koa();
 if (config.get('trustProxyHeaders')) {
@@ -69,6 +70,7 @@ app.use(_.post('/web', WebEndpoint.handle.bind(WebEndpoint)));
 app.use(_.post('/search', SearchEndpoint.handle.bind(SearchEndpoint)));
 app.use(_.post('/export', ExportEndpoint.handle.bind(ExportEndpoint)));
 app.use(_.post('/import', ImportEndpoint.handle.bind(ImportEndpoint)));
+app.use(_.get('/', SpecEndpoint.handle.bind(SpecEndpoint)));
 
 Debug.init(process.env.DEBUG_LEVEL ? parseInt(process.env.DEBUG_LEVEL) : 1);
 Translators.init()
