@@ -237,9 +237,11 @@ WebSession.prototype.translate = async function (translate, translators) {
 	}
 	
 	var translator;
+	var upToDateTranslator;
 	var items;
 	while (translator = translators.shift()) {
-		translate.setTranslator(translator);
+		upToDateTranslator = await Zotero.Translators.updateTranslatorIfNeeded(translator.translatorID);
+		translate.setTranslator(upToDateTranslator);
 		try {
 			items = await translate.translate({
 				libraryID: false

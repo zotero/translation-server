@@ -12,5 +12,8 @@
 	},
 	"trustProxyHeaders": false, // Trust X-Forwarded-For when logging requests
 	"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
-	"translatorsDirectory": "./modules/translators"
+	"translatorsDirectory": "./modules/translators",
+	"translatorsAutoUpdate" : true,
+	"REPOSITORY_URL" : "https://repo.zotero.org/repo",
+	"metadataValidForHours" : 24
 }
