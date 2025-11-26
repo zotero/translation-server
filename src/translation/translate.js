@@ -41,7 +41,7 @@ var { JSDOM } = require('jsdom');
 var dom = new JSDOM('<html></html>');
 wgxpath.install(dom.window, true);
 global.DOMParser = dom.window.DOMParser;
-global.XMLSerializer = require("w3c-xmlserializer/lib/XMLSerializer").interface;
+global.XMLSerializer = require("w3c-xmlserializer").interface;
 
 // Shimming innerText property for JSDOM attributes, see https://github.com/jsdom/jsdom/issues/1245
 var Attr = require('jsdom/lib/jsdom/living/generated/Attr');
