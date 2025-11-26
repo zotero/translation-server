@@ -44,14 +44,14 @@ global.DOMParser = dom.window.DOMParser;
 global.XMLSerializer = require("w3c-xmlserializer").interface;
 
 // Shimming innerText property for JSDOM attributes, see https://github.com/jsdom/jsdom/issues/1245
-var Attr = require('jsdom/lib/jsdom/living/generated/Attr');
-Object.defineProperty(Attr.interface.prototype, 'innerText', {
+var { implementation: AttrImpl } = require('jsdom/lib/jsdom/living/attributes/Attr-impl');
+Object.defineProperty(AttrImpl.prototype, 'innerText', {
 	get: function() { return this.textContent },
 	set: function(value) { this.textContent = value },
 	configurable: true,
 });
-var Node = require('jsdom/lib/jsdom/living/generated/Node');
-Object.defineProperty(Node.interface.prototype, 'innerText', {
+var { implementation: NodeImpl } = require('jsdom/lib/jsdom/living/nodes/Node-impl');
+Object.defineProperty(NodeImpl.prototype, 'innerText', {
 	get: function() {
 		// innerText in the browser is more sophisticated, but this removes most unwanted content
 		// https://github.com/jsdom/jsdom/issues/1245#issuecomment-584677454
