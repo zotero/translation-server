@@ -80,6 +80,10 @@ Object.defineProperty(JSDOM.prototype, 'window', {
 var dom = new JSDOM('<html></html>');
 wgxpath.install(dom.window, true);
 global.DOMParser = dom.window.DOMParser;
-global.XMLSerializer = require("w3c-xmlserializer").interface;
+global.XMLSerializer = class XMLSerializer {
+	serializeToString(node) {
+		return serializeNode(node);
+	}
+};
 
 module.exports = Zotero.Translate;
