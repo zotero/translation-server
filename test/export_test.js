@@ -130,7 +130,7 @@ describe("/export", function () {
 		var doc = dp.parseFromString(response.text, 'text/xml');
 		assert.equal(doc.documentElement.localName, 'RDF');
 		assert.equal(
-			doc.querySelector('bibo\\:Issue dcterms\\:isPartOf bibo\\:Newspaper dcterms\\:title').textContent,
+			doc.querySelector('Issue isPartOf Newspaper title').textContent,
 			'The New York Times'
 		);
 	});
@@ -144,7 +144,7 @@ describe("/export", function () {
 		var dp = new DOMParser();
 		var doc = dp.parseFromString(response.text, 'text/xml');
 		assert.equal(doc.documentElement.localName, 'RDF');
-		assert.equal(doc.querySelector('bibo\\:Webpage dcterms\\:title').textContent, 'Example');
+		assert.equal(doc.querySelector('Webpage title').textContent, 'Example');
 	});
 	
 	it("should export to RefWorks Tagged", async function () {
