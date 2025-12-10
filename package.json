@@ -28,8 +28,8 @@
 	"devDependencies": {
 		"@zotero/eslint-config": "^1.0.8",
 		"chai": "^4.1.2",
-		"eslint": "^5.16.0",
-		"mocha": "^5.2.0",
+		"eslint": "^9.39.1",
+		"mocha": "^11.7.5",
 		"sinon": "^6.1.4",
 		"supertest": "^3.1.0"
 	},
