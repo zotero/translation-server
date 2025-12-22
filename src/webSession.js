@@ -85,6 +85,11 @@ WebSession.prototype.handleURL = async function () {
 			await SearchEndpoint.handleIdentifier(this.ctx, { DOI: doi });
 			return;
 		}
+		let pmid = this.cleanPMIDFromURL(url);
+		if (pmid) {
+			await SearchEndpoint.handleIdentifier(this.ctx, { PMID: pmid });
+			return;
+		}
 	}
 	
 	var responseTypeMap = new Map([
@@ -468,4 +473,13 @@ WebSession.prototype.cleanDOIFromURL = function (url) {
 		doi = doi.replace(/[?&#].*/, '');
 	}
 	return doi || null;
+};
+
+WebSession.prototype.cleanPMIDFromURL = function (url) {
+	let pmid = null;
+	let pmidMatch = decodeURIComponent(url).match(/^https?:\/\/www.ncbi.nlm.nih.gov\/pubmed\/(\d+)\/?/);
+	if (pmidMatch) {
+		pmid = pmidMatch[0];
+	}
+	return pmid;
 };
