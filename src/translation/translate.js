@@ -40,9 +40,17 @@ global.XPathResult = wgxpath.XPathResultType;
 var { JSDOM } = require('jsdom');
 var serializeNode = require("w3c-xmlserializer");
 
+// Cache shimmed windows to avoid performance issues
+const shimmedWindows = new WeakMap();
+
 let originalWindowProp = Object.getOwnPropertyDescriptor(JSDOM.prototype, 'window');
 Object.defineProperty(JSDOM.prototype, 'window', {
 	get() {
+		// Return cached window if already shimmed
+		if (shimmedWindows.has(this)) {
+			return shimmedWindows.get(this);
+		}
+
 		let win = originalWindowProp.get.call(this);
 
 		// Shimming innerText property for JSDOM attributes, see https://github.com/jsdom/jsdom/issues/1245
@@ -70,6 +78,9 @@ Object.defineProperty(JSDOM.prototype, 'window', {
 			},
 			configurable: true,
 		});
+
+		// Cache the shimmed window for subsequent accesses
+		shimmedWindows.set(this, win);
 		return win;
 	},
 	set(value) {
