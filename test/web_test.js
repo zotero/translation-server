@@ -24,10 +24,11 @@ describe("/web", function () {
 			.send(url);
 		assert.equal(response.statusCode, 200);
 		var json = response.body;
-		
-		assert.lengthOf(json, 1);
-		assert.equal(json[0].itemType, 'journalArticle');
-		assert.equal(json[0].title, 'Title');
+		var items = json.filter(item => item.itemType !== 'attachment');
+
+		assert.lengthOf(items, 1);
+		assert.equal(items[0].itemType, 'journalArticle');
+		assert.equal(items[0].title, 'Title');
 	});
 	
 	
@@ -42,17 +43,18 @@ describe("/web", function () {
 		assert.equal(json.url, url);
 		assert.property(json, 'session');
 		assert.deepEqual(json.items, { 0: 'A', 1: 'B', 2: 'C' });
-		
+
 		delete json.items[1];
-		
+
 		response = await request()
 			.post('/web')
 			.send(json);
 		assert.equal(response.statusCode, 200);
 		json = response.body;
-		assert.lengthOf(json, 2);
-		assert.equal(json[0].title, 'A');
-		assert.equal(json[1].title, 'C');
+		var items = json.filter(item => item.itemType !== 'attachment');
+		assert.lengthOf(items, 2);
+		assert.equal(items[0].title, 'A');
+		assert.equal(items[1].title, 'C');
 	});
 	
 	
@@ -68,19 +70,20 @@ describe("/web", function () {
 		assert.equal(json.url, url);
 		assert.property(json, 'session');
 		assert.deepEqual(json.items, { 0: 'A', 1: 'B', 2: 'C' });
-		
+
 		delete json.items[1];
 		// Change the session id
 		json.session[0] = json.session[0] == 'a' ? 'b' : 'a';
-		
+
 		response = await request()
 			.post('/web')
 			.send(json);
 		assert.equal(response.statusCode, 200);
 		json = response.body;
-		assert.lengthOf(json, 2);
-		assert.equal(json[0].title, 'A');
-		assert.equal(json[1].title, 'C');
+		var items = json.filter(item => item.itemType !== 'attachment');
+		assert.lengthOf(items, 2);
+		assert.equal(items[0].title, 'A');
+		assert.equal(items[1].title, 'C');
 	});
 	
 	
@@ -93,11 +96,12 @@ describe("/web", function () {
 			.send(url);
 		assert.equal(response.statusCode, 200);
 		var json = response.body;
-		
-		assert.lengthOf(json, 1);
-		assert.equal(json[0].itemType, 'journalArticle');
-		assert.equal(json[0].title, 'Title');
-		assert.equal(json[0].url, finalURL);
+		var items = json.filter(item => item.itemType !== 'attachment');
+
+		assert.lengthOf(items, 1);
+		assert.equal(items[0].itemType, 'journalArticle');
+		assert.equal(items[0].title, 'Title');
+		assert.equal(items[0].url, finalURL);
 	});
 	
 	
@@ -137,10 +141,11 @@ describe("/web", function () {
 			.send(url);
 		assert.equal(response.statusCode, 200);
 		var json = response.body;
-		
-		assert.lengthOf(json, 1);
-		assert.equal(json[0].itemType, 'journalArticle');
-		assert.equal(json[0].title, 'Titre');
+		var items = json.filter(item => item.itemType !== 'attachment');
+
+		assert.lengthOf(items, 1);
+		assert.equal(items[0].itemType, 'journalArticle');
+		assert.equal(items[0].title, 'Titre');
 	});
 	
 	it("should reject non-HTML/XML upstream content types", async function () {
