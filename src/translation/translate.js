@@ -37,45 +37,52 @@ Zotero.Translate.ItemSaver.prototype.saveItems = async function (jsonItems, atta
 // Translation architecture shims and monkey-patches
 var wgxpath = require('wicked-good-xpath');
 global.XPathResult = wgxpath.XPathResultType;
-var { JSDOM } = require('jsdom');
+var jsdom = require('jsdom');
+var { JSDOM } = jsdom;
 var serializeNode = require("w3c-xmlserializer");
 
-let originalWindowProp = Object.getOwnPropertyDescriptor(JSDOM.prototype, 'window');
-Object.defineProperty(JSDOM.prototype, 'window', {
-	get() {
-		let win = originalWindowProp.get.call(this);
+// Shim innerText for JSDOM, see https://github.com/jsdom/jsdom/issues/1245
+// JSDOM interfaces are recreated per instance, so we use the beforeParse hook
+// to apply shims once per instance (not on every window access).
+function shimInnerText(window) {
+	Object.defineProperty(window.Attr.prototype, 'innerText', {
+		get() {
+			return this.textContent;
+		},
+		set(value) {
+			this.textContent = value;
+		},
+		configurable: true,
+	});
+	Object.defineProperty(window.Node.prototype, 'innerText', {
+		get() {
+			// innerText in the browser is more sophisticated, but this removes most unwanted content
+			// https://github.com/jsdom/jsdom/issues/1245#issuecomment-584677454
+			let el = this.cloneNode(true);
+			el.querySelectorAll('script, style').forEach(s => s.remove());
+			return el.textContent;
+		},
+		set(value) {
+			this.textContent = value;
+		},
+		configurable: true,
+	});
+}
 
-		// Shimming innerText property for JSDOM attributes, see https://github.com/jsdom/jsdom/issues/1245
-		// JSDOM interfaces are now recreated each time a new JSDOM instance is constructed,
-		// so we add our shims in the window getter
-		Object.defineProperty(win.Attr.prototype, 'innerText', {
-			get() {
-				return this.textContent;
-			},
-			set(value) {
-				this.textContent = value;
-			},
-			configurable: true,
-		});
-		Object.defineProperty(win.Node.prototype, 'innerText', {
-			get() {
-				// innerText in the browser is more sophisticated, but this removes most unwanted content
-				// https://github.com/jsdom/jsdom/issues/1245#issuecomment-584677454
-				let el = this.cloneNode(true);
-				el.querySelectorAll('script, style').forEach(s => s.remove());
-				return el.textContent;
-			},
-			set(value) {
-				this.textContent = value;
-			},
-			configurable: true,
-		});
-		return win;
-	},
-	set(value) {
-		originalWindowProp.set.call(this, value);
-	},
-});
+// Wrap JSDOM constructor to inject innerText shim via beforeParse for all instances
+jsdom.JSDOM = class extends JSDOM {
+	constructor(input, options = {}) {
+		var originalBeforeParse = options.beforeParse;
+		options.beforeParse = function (window) {
+			shimInnerText(window);
+			if (originalBeforeParse) {
+				originalBeforeParse(window);
+			}
+		};
+		super(input, options);
+	}
+};
+JSDOM = jsdom.JSDOM;
 
 var dom = new JSDOM('<html></html>');
 wgxpath.install(dom.window, true);
