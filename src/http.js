@@ -30,7 +30,7 @@ var url = require('url');
 var jsdom = require('jsdom');
 var { JSDOM } = jsdom;
 var wgxpath = require('wicked-good-xpath');
-var MIMEType = require("whatwg-mimetype"); // Use the same MIME type library as JSDOM
+var { MIMEType } = require("whatwg-mimetype"); // Use the same MIME type library as JSDOM
 
 /**
  * Functions for performing HTTP requests
