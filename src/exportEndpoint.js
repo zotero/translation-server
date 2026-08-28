@@ -49,7 +49,7 @@ var ExportEndpoint = module.exports = {
 			ctx.throw(400, "Input must be an array of items as JSON");
 		}
 		
-		var translator = Zotero.Translators.get(translatorID);
+		var translator = await Zotero.Translators.updateTranslatorIfNeeded([translatorID]);
 		var legacy = Zotero.Utilities.semverCompare('4.0.27', translator.metadata.minVersion) > 0;
 		
 		// Emulate itemsToExportFormat as best as we can
@@ -69,7 +69,7 @@ var ExportEndpoint = module.exports = {
 		}
 		
 		var translate = new Translate.Export();
-		translate.setTranslator(translatorID);
+		translate.setTranslator(translator);
 		translate.setItems(items);
 		try {
 			await new Promise(function (resolve, reject) {
