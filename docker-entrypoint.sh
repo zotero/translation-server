@@ -1,9 +1,11 @@
 #!/bin/bash
+set -e
 
-# will be deprecated when https://github.com/zotero/translation-server/issues/1 will be released
-echo "-> Updating zotero translators"
-cd /app/modules/translators/
-git pull --ff-only origin master
+if [ -d "/app/modules/translators/.git" ]; then
+    echo "-> Updating zotero translators"
+    git -C /app/modules/translators/ pull --ff-only origin master || echo "-> Warning: Could not update translators"
+fi
 
 cd /app/
 exec npm start
+
