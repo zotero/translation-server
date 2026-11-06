@@ -1,6 +1,10 @@
 .git/
 modules/translators/
+modules/translate/
+modules/utilities/
+modules/zotero-schema/
 Dockerfile
 docker-compose.*
 npm-debug.log
 node_modules/
+
