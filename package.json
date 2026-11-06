@@ -12,7 +12,7 @@
 		"aws-sdk": "^2.1692.0",
 		"config": "^4.1.1",
 		"iconv-lite": "^0.4.24",
-		"jsdom": "^29.0.1",
+		"jsdom": "^31.0.0",
 		"koa": "^2.15.3",
 		"koa-bodyparser": "^4.4.1",
 		"koa-route": "^3.2.0",
