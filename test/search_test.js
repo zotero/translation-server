@@ -81,8 +81,6 @@ describe("/search", function () {
 	
 	
 	it("should perform a text search", async function () {
-		config.identifierSearchLambda = 'IdentifierSearch';
-		
 		var response = await request()
 			.post('/search')
 			.set('Content-Type', 'text/plain')
