@@ -30,6 +30,16 @@ var TestEndpoint = {
 		ctx.redirect('/test/single');
 	},
 	
+	handleRedirectPrivate: async function (ctx, _next) {
+		// 307 keeps the method and body
+		ctx.status = 307;
+		ctx.redirect('http://10.0.0.1/');
+	},
+	
+	handleMetaRefreshPrivate: async function (ctx, _next) {
+		ctx.response.body = '<html><head><meta http-equiv="refresh" content="0;url=http://10.0.0.1/"></head></html>';
+	},
+	
 	handleBibTeX: async function (ctx, _next) {
 		ctx.set('Content-Type', 'application/x-bibtex');
 		ctx.response.body = fs

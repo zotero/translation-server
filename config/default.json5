@@ -1,5 +1,6 @@
 {
 	"allowedOrigins": [], // CORS
+	"allowPrivateAddresses": false, // Allow requests to loopback, private and other non-public addresses
 	"blacklistedDomains": [],
 	"deproxifyURLs": false, // Automatically try deproxified versions of URLs
 	"identifierSearchLambda": "", // Identifier search Lambda function for text search

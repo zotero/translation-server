@@ -24,6 +24,8 @@
 */
 
 var config = require('config');
+var dns = require('dns');
+var ipaddr = require('ipaddr.js');
 var request = require('request');
 var iconv = require('iconv-lite');
 var url = require('url');
@@ -61,6 +63,44 @@ Zotero.HTTP = new function() {
 		this.message = msg;
 	};
 	this.UnsupportedFormatError.prototype = Object.create(Error.prototype);
+	
+	this.BlockedURLError = function (url) {
+		this.message = `${url} is not a public http(s) URL`;
+	};
+	this.BlockedURLError.prototype = Object.create(Error.prototype);
+	
+	/**
+	 * Reject URLs that do not use http(s) or that resolve to non-public addresses
+	 *
+	 * @param {URL} requestURL
+	 * @return {Promise<undefined>}
+	 */
+	this.checkURL = async function (requestURL) {
+		if (!['http:', 'https:'].includes(requestURL.protocol)) {
+			throw new Zotero.HTTP.BlockedURLError(requestURL);
+		}
+		if (config.get('allowPrivateAddresses')) {
+			return;
+		}
+		// Remove the brackets from IPv6 literals
+		let host = requestURL.hostname.replace(/^\[(.*)\]$/, '$1');
+		let addresses = ipaddr.isValid(host)
+			? [host]
+			: (await dns.promises.lookup(host, { all: true })).map(x => x.address);
+		if (!addresses.every(address => Zotero.HTTP.isPublicAddress(address))) {
+			throw new Zotero.HTTP.BlockedURLError(requestURL);
+		}
+	};
+	
+	/**
+	 * ipaddr.js gives the 'unicast' range only to globally routable addresses
+	 *
+	 * @param {String} address - IPv4 or IPv6 address
+	 * @return {Boolean}
+	 */
+	this.isPublicAddress = function (address) {
+		return ipaddr.process(address).range() == 'unicast';
+	};
 	
 	/**
 	 * Get a promise for a HTTP request
@@ -135,7 +175,7 @@ Zotero.HTTP = new function() {
 		// Parse URL to escape it (e.g., Unicode characters)
 		var parsedURL = new url.URL(requestURL);
 		
-		let {response, body} = await customRequest(method, parsedURL, options);
+		let {response, body} = await requestWithRedirects(method, parsedURL, options);
 		
 		if (options.debug) {
 			Zotero.debug(`HTTP ${response.statusCode} response: ${body}`);
@@ -338,6 +378,52 @@ function decodeContent(html, contentType) {
 }
 
 /**
+ * Follow redirects here and not in request.js, so that each hop is checked
+ * before it is requested
+ *
+ * @param {String} method
+ * @param {URL} requestURL
+ * @param {Object} options
+ * @return {Promise<Object>} response, body
+ */
+async function requestWithRedirects(method, requestURL, options) {
+	for (let redirects = 0; ; redirects++) {
+		await Zotero.HTTP.checkURL(requestURL);
+		let { response, body } = await customRequest(method, requestURL, options);
+		if (!isRedirect(response)) {
+			return { response, body };
+		}
+		if (redirects >= 10) {
+			throw new Error(`Exceeded maxRedirects. Probably stuck in a redirect loop ${requestURL}`);
+		}
+		let nextURL = new url.URL(response.headers.location, requestURL);
+		// Do the same as request.js with followAllRedirects
+		let headers = Object.assign({}, options.headers);
+		for (let name of Object.keys(headers)) {
+			let lc = name.toLowerCase();
+			if (lc == 'referer'
+					|| (lc == 'authorization' && nextURL.hostname != requestURL.hostname)
+					|| (response.statusCode != 307 && ['content-type', 'content-length'].includes(lc))) {
+				delete headers[name];
+			}
+		}
+		headers.Referer = requestURL.href;
+		options = Object.assign({}, options, { headers });
+		if (response.statusCode != 307) {
+			options.body = null;
+			if (method != 'HEAD') {
+				method = 'GET';
+			}
+		}
+		requestURL = nextURL;
+	}
+}
+
+function isRedirect(response) {
+	return response.statusCode >= 300 && response.statusCode < 400 && !!response.headers.location;
+}
+
+/**
  * request.js doesn't support response size limitation, therefore
  * we have to do it manually
  *
@@ -365,7 +451,7 @@ function customRequest(method, requestURL, options) {
 			timeout: options.timeout,
 			body: options.body,
 			gzip: true,
-			followAllRedirects: true,
+			followRedirect: false,
 			jar: options.cookieSandbox,
 			encoding: null // Get body in a buffer
 		})
@@ -388,6 +474,13 @@ function customRequest(method, requestURL, options) {
 			.on('response', function (res) {
 				if (returned) return;
 				response = res;
+				
+				// requestWithRedirects() follows the redirect
+				if (isRedirect(response)) {
+					req.abort();
+					returned = true;
+					return resolve({ response, body: null });
+				}
 				
 				if (!response.headers['content-type']) {
 					returned = true;

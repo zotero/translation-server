@@ -1,4 +1,5 @@
 {
 	"testPort": 3456,
+	"allowPrivateAddresses": true,
 	"identifierSearchURL": "http://identifier-search/search?q="
 }
