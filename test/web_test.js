@@ -162,4 +162,20 @@ describe("/web", function () {
 		assert.equal(response.statusCode, 400);
 		assert.equal(response.text, "The remote document is not in a supported format");
 	});
+	
+	it("should reject a private address with 400", async function () {
+		var config = require('config');
+		config.allowPrivateAddresses = false;
+		try {
+			var response = await request()
+				.post('/web')
+				.set('Content-Type', 'text/plain')
+				.send(testURL + 'single');
+		}
+		finally {
+			config.allowPrivateAddresses = true;
+		}
+		assert.equal(response.statusCode, 400);
+		assert.equal(response.text, "URL is not allowed");
+	});
 });

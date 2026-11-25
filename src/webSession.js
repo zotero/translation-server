@@ -199,6 +199,10 @@ WebSession.prototype.handleURL = async function () {
 				this.ctx.throw(400, "Remote page not found");
 			}
 			
+			if (e instanceof Zotero.HTTP.BlockedURLError) {
+				this.ctx.throw(400, "URL is not allowed");
+			}
+			
 			let doi = this.cleanDOIFromURL(url);
 			if (doi) {
 				Zotero.debug(`Error translating page -- continuing with DOI ${doi} from URL`);
