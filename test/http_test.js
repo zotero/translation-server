@@ -55,6 +55,13 @@ describe("Zotero.HTTP", function () {
 			assert.instanceOf(e, Error);
 			assert.include(e.message, 'Exceeded maxRedirects');
 		});
+		
+		it("should resolve a relative meta refresh against the URL after HTTP redirects", async function () {
+			let xmlhttp = await Zotero.HTTP.request(
+				'GET', testURL + 'redirectToMetaRefresh', { responseType: 'document' }
+			);
+			assert.equal(xmlhttp.responseURL, testURL + 'sub/echo');
+		});
 	});
 	
 	describe("#request()", function () {

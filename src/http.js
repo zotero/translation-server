@@ -254,7 +254,8 @@ Zotero.HTTP = new function() {
 					// follow it
 					if (parts.length == 2 && parseInt(parts[0]) <= 15) {
 						let newURL = parts[1].trim().replace(/^'(.+)'/, '$1');
-						newURL = url.resolve(requestURL, newURL);
+						// Resolve against the final URL after any HTTP redirects
+						newURL = url.resolve(result.responseURL, newURL);
 						
 						// Count meta refreshes and HTTP redirects together
 						if (redirects >= MAX_REDIRECTS) {

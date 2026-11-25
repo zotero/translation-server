@@ -55,6 +55,15 @@ var TestEndpoint = {
 		ctx.response.body = '<html><head><meta http-equiv="refresh" content="0;url=/test/metaRefreshLoop"></head></html>';
 	},
 	
+	handleRedirectToMetaRefresh: async function (ctx, _next) {
+		ctx.redirect('/test/sub/metaRefresh');
+	},
+	
+	handleSubMetaRefresh: async function (ctx, _next) {
+		// Relative URL, so it resolves differently against /test/sub/ and /test/
+		ctx.response.body = '<html><head><meta http-equiv="refresh" content="0;url=echo"></head></html>';
+	},
+	
 	handleBibTeX: async function (ctx, _next) {
 		ctx.set('Content-Type', 'application/x-bibtex');
 		ctx.response.body = fs
