@@ -212,7 +212,7 @@ Zotero.HTTP = new function() {
 		// Parse URL to escape it (e.g., Unicode characters)
 		var parsedURL = new url.URL(requestURL);
 		
-		let {response, body} = await requestWithRedirects(method, parsedURL, options);
+		let {response, body, redirects} = await requestWithRedirects(method, parsedURL, options);
 		
 		if (options.debug) {
 			Zotero.debug(`HTTP ${response.statusCode} response: ${body}`);
@@ -256,6 +256,11 @@ Zotero.HTTP = new function() {
 						let newURL = parts[1].trim().replace(/^'(.+)'/, '$1');
 						newURL = url.resolve(requestURL, newURL);
 						
+						// Count meta refreshes and HTTP redirects together
+						if (redirects >= MAX_REDIRECTS) {
+							throw new Error(`Exceeded maxRedirects. Probably stuck in a redirect loop ${newURL}`);
+						}
+						
 						Zotero.debug("Meta refresh to " + newURL);
 						// Like a browser, follow a meta refresh with a GET
 						let headers = Object.assign({}, options.headers);
@@ -267,7 +272,7 @@ Zotero.HTTP = new function() {
 						result = Zotero.HTTP.request(
 							'GET',
 							newURL,
-							Object.assign({}, options, { body: null, headers })
+							Object.assign({}, options, { body: null, headers, redirects: redirects + 1 })
 						);
 					}
 				}
@@ -425,6 +430,8 @@ function decodeContent(html, contentType) {
 	return html;
 }
 
+const MAX_REDIRECTS = 10;
+
 /**
  * Follow redirects here and not in request.js, so that each hop is checked
  * before it is requested
@@ -432,16 +439,17 @@ function decodeContent(html, contentType) {
  * @param {String} method
  * @param {URL} requestURL
  * @param {Object} options
- * @return {Promise<Object>} response, body
+ * @return {Promise<Object>} response, body, redirects (total hops followed)
  */
 async function requestWithRedirects(method, requestURL, options) {
-	for (let redirects = 0; ; redirects++) {
+	// options.redirects is the number of hops already followed (by meta refreshes)
+	for (let redirects = options.redirects || 0; ; redirects++) {
 		await Zotero.HTTP.checkURL(requestURL);
 		let { response, body } = await customRequest(method, requestURL, options);
 		if (!isRedirect(response)) {
-			return { response, body };
+			return { response, body, redirects };
 		}
-		if (redirects >= 10) {
+		if (redirects >= MAX_REDIRECTS) {
 			throw new Error(`Exceeded maxRedirects. Probably stuck in a redirect loop ${requestURL}`);
 		}
 		let nextURL = new url.URL(response.headers.location, requestURL);

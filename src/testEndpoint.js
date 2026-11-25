@@ -51,6 +51,10 @@ var TestEndpoint = {
 			+ `<p id="type">${ctx.get('Content-Type')}</p></body></html>`;
 	},
 	
+	handleMetaRefreshLoop: async function (ctx, _next) {
+		ctx.response.body = '<html><head><meta http-equiv="refresh" content="0;url=/test/metaRefreshLoop"></head></html>';
+	},
+	
 	handleBibTeX: async function (ctx, _next) {
 		ctx.set('Content-Type', 'application/x-bibtex');
 		ctx.response.body = fs

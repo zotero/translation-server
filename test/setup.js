@@ -27,6 +27,7 @@ testApp.use(_.post('/test/redirectPrivate', TestEndpoint.handleRedirectPrivate))
 testApp.use(_.get('/test/metaRefreshPrivate', TestEndpoint.handleMetaRefreshPrivate));
 testApp.use(_.post('/test/metaRefreshEcho', TestEndpoint.handleMetaRefreshEcho));
 testApp.use(_.all('/test/echo', TestEndpoint.handleEcho));
+testApp.use(_.get('/test/metaRefreshLoop', TestEndpoint.handleMetaRefreshLoop));
 testApp.use(_.get('/test/bibtex', TestEndpoint.handleBibTeX));
 testApp.use(_.get('/test/invalidContentType', TestEndpoint.invalidContentType));
 testApp.use(_.get('/test/missingContentType', TestEndpoint.missingContentType));

@@ -47,6 +47,14 @@ describe("Zotero.HTTP", function () {
 			assert.equal(doc.getElementById('length').textContent, '0');
 			assert.equal(doc.getElementById('type').textContent, '');
 		});
+		
+		it("should stop a meta refresh loop", async function () {
+			let e = await Zotero.HTTP.request(
+				'GET', testURL + 'metaRefreshLoop', { responseType: 'document' }
+			).catch(e => e);
+			assert.instanceOf(e, Error);
+			assert.include(e.message, 'Exceeded maxRedirects');
+		});
 	});
 	
 	describe("#request()", function () {
