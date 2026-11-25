@@ -26,7 +26,9 @@
 var config = require('config');
 var dns = require('dns');
 var ipaddr = require('ipaddr.js');
+var net = require('net');
 var request = require('request');
+var getProxyFromURI = require('request/lib/getProxyFromURI');
 var iconv = require('iconv-lite');
 var url = require('url');
 var jsdom = require('jsdom');
@@ -72,6 +74,12 @@ Zotero.HTTP = new function() {
 	/**
 	 * Reject URLs that do not use http(s) or that resolve to non-public addresses
 	 *
+	 * Without a proxy, hostnames are checked when they are resolved for the connection, in
+	 * checkedLookup(), and only IP literals are checked here (Node does not call the lookup
+	 * function for them). With a proxy, the connection goes to the proxy, so the target
+	 * hostname is resolved and checked here. The proxy resolves it again, so it should
+	 * block non-public addresses itself to prevent DNS rebinding.
+	 *
 	 * @param {URL} requestURL
 	 * @return {Promise<undefined>}
 	 */
@@ -84,10 +92,17 @@ Zotero.HTTP = new function() {
 		}
 		// Remove the brackets from IPv6 literals
 		let host = requestURL.hostname.replace(/^\[(.*)\]$/, '$1');
-		let addresses = ipaddr.isValid(host)
-			? [host]
-			: (await dns.promises.lookup(host, { all: true })).map(x => x.address);
-		if (!addresses.every(address => Zotero.HTTP.isPublicAddress(address))) {
+		let addresses;
+		if (net.isIP(host)) {
+			addresses = [host];
+		}
+		else if (usingProxy(requestURL)) {
+			addresses = (await dns.promises.lookup(host, { all: true })).map(x => x.address);
+		}
+		else {
+			return;
+		}
+		if (!addresses.length || !addresses.every(address => Zotero.HTTP.isPublicAddress(address))) {
 			throw new Zotero.HTTP.BlockedURLError(requestURL);
 		}
 	};
@@ -100,6 +115,28 @@ Zotero.HTTP = new function() {
 	 */
 	this.isPublicAddress = function (address) {
 		return ipaddr.process(address).range() == 'unicast';
+	};
+	
+	/**
+	 * dns.lookup() replacement for the socket connection, so that the addresses that are
+	 * checked are the ones that are connected to. A separate lookup before the request
+	 * could get a different answer (DNS rebinding).
+	 */
+	this.checkedLookup = function (hostname, options, callback) {
+		if (typeof options == 'function') {
+			callback = options;
+			options = {};
+		}
+		dns.lookup(hostname, options, (err, address, family) => {
+			if (err) return callback(err);
+			if (!config.get('allowPrivateAddresses')) {
+				let addresses = Array.isArray(address) ? address.map(x => x.address) : [address];
+				if (!addresses.length || !addresses.every(a => Zotero.HTTP.isPublicAddress(a))) {
+					return callback(new Zotero.HTTP.BlockedURLError(hostname));
+				}
+			}
+			callback(null, address, family);
+		});
 	};
 	
 	/**
@@ -419,6 +456,14 @@ async function requestWithRedirects(method, requestURL, options) {
 	}
 }
 
+/**
+ * Whether request.js will send this request through a proxy from the environment
+ * (HTTP_PROXY, HTTPS_PROXY, NO_PROXY), using request.js's own logic
+ */
+function usingProxy(requestURL) {
+	return !!getProxyFromURI(url.parse(requestURL.href));
+}
+
 function isRedirect(response) {
 	return response.statusCode >= 300 && response.statusCode < 400 && !!response.headers.location;
 }
@@ -452,6 +497,8 @@ function customRequest(method, requestURL, options) {
 			body: options.body,
 			gzip: true,
 			followRedirect: false,
+			// With a proxy, this would check the proxy's address, not the target's
+			lookup: usingProxy(requestURL) ? undefined : Zotero.HTTP.checkedLookup,
 			jar: options.cookieSandbox,
 			encoding: null // Get body in a buffer
 		})

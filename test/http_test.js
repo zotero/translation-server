@@ -51,6 +51,11 @@ describe("Zotero.HTTP", function () {
 			assert.instanceOf(e, Zotero.HTTP.BlockedURLError);
 		});
 		
+		it("should reject a hostname that resolves to a private address", async function () {
+			let e = await Zotero.HTTP.request('GET', testURL.replace('127.0.0.1', 'localhost') + 'plain').catch(e => e);
+			assert.instanceOf(e, Zotero.HTTP.BlockedURLError);
+		});
+		
 		it("should reject a non-http(s) URL", async function () {
 			let e = await Zotero.HTTP.request('GET', 'file:///etc/passwd').catch(e => e);
 			assert.instanceOf(e, Zotero.HTTP.BlockedURLError);
