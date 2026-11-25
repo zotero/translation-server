@@ -257,7 +257,18 @@ Zotero.HTTP = new function() {
 						newURL = url.resolve(requestURL, newURL);
 						
 						Zotero.debug("Meta refresh to " + newURL);
-						result = Zotero.HTTP.request(method, newURL, options);
+						// Like a browser, follow a meta refresh with a GET
+						let headers = Object.assign({}, options.headers);
+						for (let name of Object.keys(headers)) {
+							if (['content-type', 'content-length'].includes(name.toLowerCase())) {
+								delete headers[name];
+							}
+						}
+						result = Zotero.HTTP.request(
+							'GET',
+							newURL,
+							Object.assign({}, options, { body: null, headers })
+						);
 					}
 				}
 			}

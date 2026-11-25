@@ -36,6 +36,19 @@ describe("Zotero.HTTP", function () {
 		});
 	});
 	
+	describe("meta refresh", function () {
+		it("should follow a meta refresh after a POST with a GET", async function () {
+			let xmlhttp = await Zotero.HTTP.request(
+				'POST', testURL + 'metaRefreshEcho', { body: 'a=b', responseType: 'document' }
+			);
+			let doc = xmlhttp.response;
+			assert.equal(xmlhttp.responseURL, testURL + 'echo');
+			assert.equal(doc.getElementById('method').textContent, 'GET');
+			assert.equal(doc.getElementById('length').textContent, '0');
+			assert.equal(doc.getElementById('type').textContent, '');
+		});
+	});
+	
 	describe("#request()", function () {
 		beforeEach(function () {
 			config.allowPrivateAddresses = false;

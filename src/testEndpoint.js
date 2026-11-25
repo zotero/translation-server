@@ -40,6 +40,17 @@ var TestEndpoint = {
 		ctx.response.body = '<html><head><meta http-equiv="refresh" content="0;url=http://10.0.0.1/"></head></html>';
 	},
 	
+	handleMetaRefreshEcho: async function (ctx, _next) {
+		ctx.response.body = '<html><head><meta http-equiv="refresh" content="0;url=/test/echo"></head></html>';
+	},
+	
+	handleEcho: async function (ctx, _next) {
+		ctx.set('Content-Type', 'text/html');
+		ctx.response.body = `<html><body><p id="method">${ctx.method}</p>`
+			+ `<p id="length">${ctx.get('Content-Length') || 0}</p>`
+			+ `<p id="type">${ctx.get('Content-Type')}</p></body></html>`;
+	},
+	
 	handleBibTeX: async function (ctx, _next) {
 		ctx.set('Content-Type', 'application/x-bibtex');
 		ctx.response.body = fs
